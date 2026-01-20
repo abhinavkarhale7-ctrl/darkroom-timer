@@ -8,115 +8,161 @@
 <style>
 body {
   margin: 0;
-  padding: 12px;
+  padding: 10px;
   background: #000;
   color: #0f0;
   font-family: system-ui, monospace;
 }
-
 .app {
-  max-width: 360px;
+  max-width: 380px;
   margin: auto;
 }
-
 h1 {
   text-align: center;
   font-size: 18px;
-  margin-bottom: 10px;
 }
-
-.step {
-  display: flex;
-  gap: 6px;
+label {
+  font-size: 12px;
+}
+input, select, textarea, button {
+  width: 100%;
   margin-bottom: 6px;
-}
-
-input {
   padding: 6px;
   font-size: 14px;
-  border: none;
   border-radius: 4px;
-}
-
-.step-name {
-  flex: 1.5;
-}
-
-.step-time {
-  width: 80px;
-  text-align: center;
-}
-
-button {
-  width: 100%;
-  padding: 10px;
-  font-size: 16px;
-  margin-top: 8px;
-  border-radius: 6px;
   border: none;
+}
+textarea {
+  resize: vertical;
+}
+button {
   background: #0f0;
   color: #000;
 }
-
-.small-btn {
+.secondary {
   background: #333;
   color: #0f0;
-  margin-top: 4px;
 }
-
+.row {
+  display: flex;
+  gap: 6px;
+}
+.step {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.step input {
+  flex: 1;
+}
+.step button {
+  width: 36px;
+}
 .timer {
   text-align: center;
   font-size: 36px;
-  margin: 12px 0;
+  margin: 10px 0;
 }
-
-.current-step {
+.current {
   text-align: center;
-  font-size: 16px;
+  font-size: 14px;
+}
+hr {
+  border: 0;
+  border-top: 1px solid #333;
+  margin: 8px 0;
 }
 </style>
 </head>
 
 <body>
-
 <div class="app">
-  <h1>Darkroom Process Timer</h1>
+<h1>Darkroom Process Timer</h1>
 
-  <div id="steps"></div>
+<label>Process type</label>
+<select id="processType">
+  <option>Film</option>
+  <option>Printing</option>
+  <option>Alternative Printing</option>
+</select>
 
-  <button class="small-btn" onclick="addStep()">+ Add step</button>
+<label>Film / Paper</label>
+<input id="filmName">
 
-  <div class="current-step" id="currentStep"></div>
-  <div class="timer" id="timer">00:00</div>
+<label>Developer</label>
+<input id="developerName">
 
+<label>Push / Pull</label>
+<select id="pushPull">
+  <option>Pull -2</option>
+  <option>Pull -1</option>
+  <option selected>Normal</option>
+  <option>Push +1</option>
+  <option>Push +2</option>
+  <option>Push +3</option>
+</select>
+
+<label>Variation / Notes</label>
+<textarea id="notes"></textarea>
+
+<hr>
+
+<div id="steps"></div>
+<button class="secondary" onclick="addStep()">+ Add Step</button>
+
+<hr>
+
+<div class="current" id="currentStep"></div>
+<div class="timer" id="timer">00:00</div>
+
+<div class="row">
   <button onclick="start()">Start</button>
+  <button class="secondary" onclick="pause()">Pause</button>
+  <button class="secondary" onclick="stopTimer()">Stop</button>
+</div>
+
+<hr>
+
+<button onclick="saveProcess()">Save Process</button>
+<select id="savedProcesses" onchange="loadProcess()"></select>
+<div class="row">
+  <button class="secondary" onclick="exportProcess()">Export</button>
+  <button class="secondary" onclick="importProcess()">Import</button>
+</div>
+
+<input type="file" id="fileInput" hidden>
+
 </div>
 
 <script>
-let steps = JSON.parse(localStorage.getItem("darkroomSteps")) || [
-  { name: "Developer", time: 480 },
-  { name: "Stop", time: 30 },
-  { name: "Fix", time: 300 },
-  { name: "Wash", time: 600 }
-];
-
-let index = 0;
+let steps = [];
+let timerIndex = 0;
 let remaining = 0;
 let interval = null;
 
-function save() {
-  localStorage.setItem("darkroomSteps", JSON.stringify(steps));
+let processes = JSON.parse(localStorage.getItem("darkroomProcesses")) || {};
+
+function addStep(name="", min=0, sec=0) {
+  steps.push({ name, min, sec });
+  renderSteps();
 }
 
-function render() {
+function removeStep(i) {
+  steps.splice(i,1);
+  renderSteps();
+}
+
+function renderSteps() {
   const box = document.getElementById("steps");
   box.innerHTML = "";
-  steps.forEach((s, i) => {
+  steps.forEach((s,i)=>{
     const div = document.createElement("div");
-    div.className = "step";
+    div.className="step";
     div.innerHTML = `
-      <input class="step-name" value="${s.name}" onchange="steps[${i}].name=this.value;save()">
-      <input class="step-time" type="number" value="${s.time}" onchange="steps[${i}].time=Number(this.value);save()">
+      <input placeholder="Step" value="${s.name}" onchange="steps[${i}].name=this.value">
+      <input type="number" placeholder="Min" value="${s.min}" onchange="steps[${i}].min=Number(this.value)">
+      <input type="number" placeholder="Sec" value="${s.sec}" onchange="steps[${i}].sec=Number(this.value)">
+      <button onclick="removeStep(${i})">×</button>
     `;
     box.appendChild(div);
   });
@@ -124,49 +170,125 @@ function render() {
 
 function start() {
   if (!steps.length) return;
-  index = 0;
+  timerIndex = 0;
   nextStep();
 }
 
 function nextStep() {
   if (interval) clearInterval(interval);
-  if (index >= steps.length) {
+  if (timerIndex >= steps.length) {
     document.getElementById("currentStep").innerText = "Done";
     document.getElementById("timer").innerText = "00:00";
-    beep();
+    vibrate();
     return;
   }
-  remaining = steps[index].time;
-  document.getElementById("currentStep").innerText = steps[index].name;
+  const s = steps[timerIndex];
+  remaining = s.min*60 + s.sec;
+  document.getElementById("currentStep").innerText = s.name;
   tick();
-  interval = setInterval(tick, 1000);
+  interval = setInterval(tick,1000);
 }
 
 function tick() {
-  const m = Math.floor(remaining / 60);
-  const s = remaining % 60;
+  const m = Math.floor(remaining/60);
+  const s = remaining%60;
   document.getElementById("timer").innerText =
-    `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
-  if (remaining <= 0) {
-    beep();
-    index++;
+    String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
+  if (remaining<=0) {
+    vibrate();
+    timerIndex++;
     nextStep();
   }
   remaining--;
 }
 
-function beep() {
+function pause() {
+  if (interval) {
+    clearInterval(interval);
+    interval = null;
+  } else {
+    interval = setInterval(tick,1000);
+  }
+}
+
+function stopTimer() {
+  if (interval) clearInterval(interval);
+  interval=null;
+  document.getElementById("timer").innerText="00:00";
+  document.getElementById("currentStep").innerText="";
+}
+
+function vibrate() {
   navigator.vibrate?.(300);
 }
 
-function addStep() {
-  steps.push({ name: "Step", time: 60 });
-  save();
-  render();
+function saveProcess() {
+  const name = prompt("Name this process");
+  if (!name) return;
+  processes[name] = {
+    processType: processType.value,
+    filmName: filmName.value,
+    developerName: developerName.value,
+    pushPull: pushPull.value,
+    notes: notes.value,
+    steps
+  };
+  localStorage.setItem("darkroomProcesses", JSON.stringify(processes));
+  refreshProcessList();
 }
 
-render();
-</script>
+function refreshProcessList() {
+  const sel = document.getElementById("savedProcesses");
+  sel.innerHTML = "<option value=''>Load process</option>";
+  Object.keys(processes).forEach(p=>{
+    const o=document.createElement("option");
+    o.value=o.textContent=p;
+    sel.appendChild(o);
+  });
+}
 
+function loadProcess() {
+  const p = processes[savedProcesses.value];
+  if (!p) return;
+  processType.value = p.processType;
+  filmName.value = p.filmName;
+  developerName.value = p.developerName;
+  pushPull.value = p.pushPull;
+  notes.value = p.notes;
+  steps = p.steps;
+  renderSteps();
+}
+
+function exportProcess() {
+  const data = JSON.stringify(processes,null,2);
+  const blob = new Blob([data],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="darkroom-processes.json";
+  a.click();
+}
+
+function importProcess() {
+  fileInput.click();
+}
+
+fileInput.onchange = e => {
+  const file = e.target.files[0];
+  const r = new FileReader();
+  r.onload = ()=> {
+    processes = JSON.parse(r.result);
+    localStorage.setItem("darkroomProcesses", JSON.stringify(processes));
+    refreshProcessList();
+  };
+  r.readAsText(file);
+};
+
+addStep("Developer",8,0);
+addStep("Stop",0,30);
+addStep("Fix",5,0);
+addStep("Wash",10,0);
+refreshProcessList();
+renderSteps();
+</script>
 </body>
 </html>
