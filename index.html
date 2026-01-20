@@ -91,6 +91,8 @@ hr {
 
 <label>Developer</label>
 <input id="developerName">
+  <label>Temperature(°C)</label>label>
+  <input id="temperature" placeholder="e.g.20">
 
 <label>Push / Pull</label>
 <select id="pushPull">
@@ -229,6 +231,7 @@ function saveProcess() {
     processType: processType.value,
     filmName: filmName.value,
     developerName: developerName.value,
+    temperature: temperature.value,
     pushPull: pushPull.value,
     notes: notes.value,
     steps
@@ -253,6 +256,7 @@ function loadProcess() {
   processType.value = p.processType;
   filmName.value = p.filmName;
   developerName.value = p.developerName;
+  temperature.value = p.temperature;
   pushPull.value = p.pushPull;
   notes.value = p.notes;
   steps = p.steps;
