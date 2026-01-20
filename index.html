@@ -264,6 +264,21 @@ function loadProcess() {
   steps = p.steps;
   renderSteps();
 }
+  function deleteProcess() {
+  const name = savedProcesses.value;
+  if (!name) {
+    alert("No process selected");
+    return;
+  }
+
+  if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+
+  delete processes[name];
+  localStorage.setItem("darkroomProcesses", JSON.stringify(processes));
+
+  savedProcesses.value = "";
+  refreshProcessList();
+}
 
 function exportProcess() {
   const data = JSON.stringify(processes,null,2);
