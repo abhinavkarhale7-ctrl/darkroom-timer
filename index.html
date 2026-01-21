@@ -96,6 +96,90 @@ hr {
   border-top: 1px solid #333;
   margin: 8px 0;
 }
+.info-box {
+  background: #111;
+  border: 1px solid #0f0;
+  padding: 8px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  text-align: center;
+}
+.step-counter {
+  font-weight: bold;
+  color: #0f0;
+}
+.upcoming {
+  background: #111;
+  border-left: 3px solid #0f0;
+  padding: 6px;
+  margin-bottom: 6px;
+  font-size: 11px;
+  max-height: 100px;
+  overflow-y: auto;
+}
+.upcoming-item {
+  padding: 4px 0;
+  color: #888;
+}
+.upcoming-item.next {
+  color: #0f0;
+  font-weight: bold;
+}
+.color-dev { border-left: 4px solid #00f !important; }
+.color-stop { border-left: 4px solid #ff0 !important; }
+.color-fix { border-left: 4px solid #0f0 !important; }
+.color-wash { border-left: 4px solid #0ff !important; }
+.step-tip {
+  font-size: 10px;
+  color: #666;
+  font-style: italic;
+  margin-top: 4px;
+}
+.history-panel {
+  background: #111;
+  border: 1px solid #0f0;
+  padding: 8px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+  font-size: 10px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+.history-item {
+  padding: 4px;
+  border-bottom: 1px solid #333;
+  color: #888;
+}
+.history-item:last-child {
+  border-bottom: none;
+}
+@media (max-width: 480px) {
+  .timer {
+    font-size: 48px;
+  }
+  button {
+    min-height: 56px;
+    font-size: 18px;
+  }
+  .app {
+    max-width: 100%;
+  }
+}
+.audio-toggle {
+  width: auto;
+  padding: 4px 12px;
+  font-size: 12px;
+}
+.template-btn {
+  padding: 6px;
+  font-size: 12px;
+  background: #1a1a1a;
+  color: #0f0;
+  border: 1px solid #0f0;
+  margin: 2px;
+  cursor: pointer;
+}
 </style>
 </head>
 
@@ -141,7 +225,14 @@ hr {
 
 <hr>
 
+<div class="info-box" id="totalTime"></div>
+<div class="upcoming" id="upcomingSteps"></div>
+<div class="info-box" id="pauseTime" style="display:none;"></div>
+
 <div class="current" id="currentStep"></div>
+<div style="text-align:center;font-size:12px;color:#666;margin-bottom:6px;">
+  <span class="step-counter" id="stepCounter"></span>
+</div>
 <div class="timer" id="timer">00:00</div>
 <div id="progress" style="height:6px;background:#333;border-radius:3px;overflow:hidden;">
   <div id="bar" style="height:100%;width:0%;background:#0f0;"></div>
@@ -151,6 +242,7 @@ hr {
  <button id="startBtn" onclick="start()">Start</button>
 <button id="pauseBtn" class="secondary" onclick="pause()">Pause</button>
 <button id="stopBtn" class="secondary" onclick="stopTimer()">Stop</button>
+<button class="audio-toggle secondary" id="audioToggle" onclick="toggleAudio()" title="Toggle sound">🔊</button>
 </div>
 
 <hr>
@@ -158,11 +250,27 @@ hr {
 <button onclick="saveProcess()">Save Process</button>
 <select id="savedProcesses" onchange="loadProcess()"></select>
 
+<div style="margin-bottom: 6px;">
+  <button class="secondary" style="margin-bottom: 3px; font-size: 11px;" onclick="toggleTemplates()">⭐ Quick Templates</button>
+  <div id="templatesBox" style="display:none;background:#111;border:1px solid #0f0;padding:6px;border-radius:4px;margin-bottom:6px;">
+    <button class="template-btn" onclick="loadTemplate('C-41 Film')">C-41 Film</button>
+    <button class="template-btn" onclick="loadTemplate('E-6 Film')">E-6 Film</button>
+    <button class="template-btn" onclick="loadTemplate('B&W Film')">B&W Film</button>
+    <button class="template-btn" onclick="loadTemplate('RA-4 Print')">RA-4 Print</button>
+    <button class="template-btn" onclick="loadTemplate('B&W Print')">B&W Print</button>
+    <button class="template-btn" onclick="loadTemplate('Cyanotype')">Cyanotype</button>
+    <button class="template-btn" onclick="loadTemplate('Platinum/Palladium')">Platinum</button>
+  </div>
+</div>
+
+<div class="history-panel" id="historyPanel"></div>
+
 <div class="row">
   <button class="secondary" onclick="deleteProcess()">Delete</button>
-  <button class="secondary" onclick="exportCSV()">Export CSV</button>
-  <button class="secondary" onclick="exportProcess()">Export JSON</button>
+  <button class="secondary" onclick="exportCSV()">CSV</button>
+  <button class="secondary" onclick="exportProcess()">JSON</button>
   <button class="secondary" onclick="importProcess()">Import</button>
+  <button class="secondary" onclick="printCard()">Print</button>
 </div>
 
 <input type="file" id="fileInput" hidden>
@@ -192,6 +300,10 @@ let steps = [];
 let timerIndex = 0;
 let remaining = 0;
 let interval = null;
+let audioEnabled = true;
+let pausedTime = 0;
+let pauseStartTime = 0;
+let history = JSON.parse(localStorage.getItem("darkroomHistory")) || [];
 
 let processes = JSON.parse(localStorage.getItem("darkroomProcesses")) || {};
 
@@ -221,6 +333,53 @@ let processes = JSON.parse(localStorage.getItem("darkroomProcesses")) || {};
   ]
 };
 
+const templates = {
+  "C-41 Film": { type: "Film", name: "C-41", steps: [
+    {name: "Pre-wash", min: 1, sec: 0, tip: "Warm water"},
+    {name: "Developer", min: 3, sec: 15, tip: "Agitate every 30 sec"},
+    {name: "Stop", min: 0, sec: 30, tip: "Gentle agitation"},
+    {name: "Fix", min: 1, sec: 30, tip: "Agitate every 30 sec"},
+    {name: "Wash", min: 5, sec: 0, tip: "Multiple rinses"}
+  ]},
+  "E-6 Film": { type: "Film", name: "E-6", steps: [
+    {name: "Developer", min: 6, sec: 0, tip: "Agitate every 30 sec"},
+    {name: "Stop", min: 1, sec: 0, tip: "Gentle"},
+    {name: "Wash", min: 2, sec: 0, tip: "Clean water"},
+    {name: "Bleach", min: 6, sec: 0, tip: ""},
+    {name: "Fix", min: 6, sec: 0, tip: ""}
+  ]},
+  "B&W Film": { type: "Film", name: "B&W", steps: [
+    {name: "Developer", min: 8, sec: 0, tip: "Agitate every 30 sec"},
+    {name: "Stop", min: 0, sec: 30, tip: ""},
+    {name: "Fix", min: 5, sec: 0, tip: ""},
+    {name: "Wash", min: 10, sec: 0, tip: ""}
+  ]},
+  "RA-4 Print": { type: "Printing", name: "RA-4 Contact Printing", steps: [
+    {name: "Developer", min: 2, sec: 0, tip: "20-24°C"},
+    {name: "Stop", min: 0, sec: 30, tip: ""},
+    {name: "Fix", min: 1, sec: 0, tip: ""},
+    {name: "Wash", min: 5, sec: 0, tip: ""}
+  ]},
+  "B&W Print": { type: "Printing", name: "B&W Contact Printing", steps: [
+    {name: "Developer", min: 1, sec: 30, tip: "Rock tray"},
+    {name: "Stop", min: 0, sec: 20, tip: ""},
+    {name: "Fix", min: 2, sec: 0, tip: ""},
+    {name: "Wash", min: 5, sec: 0, tip: ""}
+  ]},
+  "Cyanotype": { type: "Alternative Printing", name: "Cyanotype", steps: [
+    {name: "Coat", min: 0, sec: 1, tip: "Brush evenly"},
+    {name: "Dry", min: 10, sec: 0, tip: "In dark room"},
+    {name: "Expose", min: 15, sec: 0, tip: "UV light or sun"},
+    {name: "Rinse", min: 5, sec: 0, tip: "Wash in water"}
+  ]},
+  "Platinum/Palladium": { type: "Alternative Printing", name: "Platinum/Palladium", steps: [
+    {name: "Coat", min: 0, sec: 1, tip: "Brush evenly"},
+    {name: "Dry", min: 10, sec: 0, tip: "Heat"},
+    {name: "Expose", min: 10, sec: 0, tip: "UV light"},
+    {name: "Develop", min: 2, sec: 0, tip: "Potassium oxalate"}
+  ]}
+};
+
   function updateProcessNames(selected = null) {
   const type = processType.value;
   const list = processOptions[type] || [];
@@ -237,8 +396,8 @@ let processes = JSON.parse(localStorage.getItem("darkroomProcesses")) || {};
   }
 }
 
-function addStep(name="", min=0, sec=0) {
-  steps.push({ name, min, sec });
+function addStep(name="", min=0, sec=0, tip="") {
+  steps.push({ name, min, sec, tip });
   renderSteps();
 }
 
@@ -277,6 +436,14 @@ function renderSteps() {
     btn.onclick = () => removeStep(i);
 
     div.append(nameInput, minInput, secInput, btn);
+    
+    const tipInput = document.createElement("input");
+    tipInput.placeholder = "Tip (e.g. Agitate every 30 sec)";
+    tipInput.value = s.tip || "";
+    tipInput.style.fontSize = "11px";
+    tipInput.oninput = e => steps[i].tip = e.target.value;
+    div.appendChild(tipInput);
+    
     box.appendChild(div);
   });
 }
@@ -285,11 +452,48 @@ function start() {
   if (!steps.length) return;
   timer.className = "timer running";
   timerIndex = 0;
+  pausedTime = 0;
+  updateTotalTime();
+  updateUpcomingSteps();
   nextStep();
   startBtn.disabled = true;
   pauseBtn.disabled = false;
   pauseBtn.textContent = "Pause";
   timer.className = "timer running";
+}
+
+function updateTotalTime() {
+  let totalSec = 0;
+  steps.forEach(s => {
+    totalSec += s.min * 60 + s.sec;
+  });
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  document.getElementById("totalTime").innerText = 
+    `Total: ${m}m ${s}s`;
+}
+
+function updateUpcomingSteps() {
+  const upcoming = document.getElementById("upcomingSteps");
+  upcoming.innerHTML = "";
+  if (timerIndex < steps.length) {
+    const current = steps[timerIndex];
+    const tip = current.tip || "";
+    upcoming.innerHTML = `<div class="upcoming-item next">▶ ${current.name}${tip ? ": " + tip : ""}</div>`;
+    for (let i = timerIndex + 1; i < Math.min(timerIndex + 3, steps.length); i++) {
+      const s = steps[i];
+      upcoming.innerHTML += `<div class="upcoming-item">${s.name} (${s.min}:${String(s.sec).padStart(2,"0")})</div>`;
+    }
+  }
+}
+
+function getStepColor(name) {
+  const lower = name.toLowerCase();
+  if (lower.includes("develop")) return "color-dev";
+  if (lower.includes("stop")) return "color-stop";
+  if (lower.includes("fix")) return "color-fix";
+  if (lower.includes("wash")) return "color-wash";
+  return "";
 }
 
 function nextStep() {
@@ -300,6 +504,10 @@ function nextStep() {
     document.getElementById("timer").innerText = "00:00";
     timer.className = "timer done";
     bar.style.width = "100%";
+    document.getElementById("stepCounter").innerText = "";
+    document.getElementById("upcomingSteps").innerHTML = "";
+    addToHistory(currentProcessName || "Quick Process");
+    playSound();
     vibrate();
     return;
   }
@@ -307,9 +515,16 @@ function nextStep() {
   remaining = s.min*60 + s.sec;
   document.getElementById("currentStep").innerText = s.name;
   currentStep.style.borderColor = "#0f0";
+  currentStep.className = getStepColor(s.name);
+  document.getElementById("stepCounter").innerText = `Step ${timerIndex + 1} of ${steps.length}`;
+  if (s.tip) {
+    currentStep.innerHTML += `<div class="step-tip">${s.tip}</div>`;
+  }
   bar.style.width = "0%";
+  pausedTime = 0;
   tick();
   interval = setInterval(tick,1000);
+  updateUpcomingSteps();
 }
 
 function tick() {
@@ -325,6 +540,7 @@ function tick() {
   bar.style.width = Math.max(0, progress) + "%";
   
   if (remaining<=0) {
+    playSound();
     vibrate();
     timerIndex++;
     nextStep();
@@ -343,25 +559,70 @@ function pause() {
     interval = null;
     timer.className = "timer paused";
     pauseBtn.textContent = "Resume";
+    pauseStartTime = Date.now();
+    document.getElementById("pauseTime").style.display = "block";
   } else {
+    if (pauseStartTime) {
+      pausedTime += Math.floor((Date.now() - pauseStartTime) / 1000);
+    }
+    document.getElementById("pauseTime").style.display = "none";
     interval = setInterval(tick, 1000);
     timer.className = "timer running";
     pauseBtn.textContent = "Pause";
   }
 }
 
+let pauseInterval = null;
+
+function updatePauseTime() {
+  if (pauseStartTime) {
+    const elapsed = pausedTime + Math.floor((Date.now() - pauseStartTime) / 1000);
+    const m = Math.floor(elapsed / 60);
+    const s = elapsed % 60;
+    document.getElementById("pauseTime").innerText = 
+      `Paused: ${m}m ${s}s`;
+  }
+}
+
 function stopTimer() {
   if (interval) clearInterval(interval);
+  if (pauseInterval) clearInterval(pauseInterval);
   interval=null;
+  pauseInterval = null;
   document.getElementById("timer").innerText="00:00";
   document.getElementById("currentStep").innerText="";
+  document.getElementById("stepCounter").innerText="";
+  document.getElementById("upcomingSteps").innerHTML="";
+  document.getElementById("pauseTime").style.display="none";
   startBtn.disabled = false;
   pauseBtn.textContent = "Pause";
   timer.className = "timer";
+  pausedTime = 0;
 }
 
 function vibrate() {
   navigator.vibrate?.(300);
+}
+
+function playSound() {
+  if (!audioEnabled) return;
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  const oscillator = audioContext.createOscillator();
+  const gainNode = audioContext.createGain();
+  oscillator.connect(gainNode);
+  gainNode.connect(audioContext.destination);
+  oscillator.frequency.value = 800;
+  oscillator.type = 'sine';
+  gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+  gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+  oscillator.start(audioContext.currentTime);
+  oscillator.stop(audioContext.currentTime + 0.5);
+}
+
+function toggleAudio() {
+  audioEnabled = !audioEnabled;
+  document.getElementById("audioToggle").style.opacity = audioEnabled ? "1" : "0.5";
+  if (audioEnabled) playSound();
 }
 
 function saveProcess() {
@@ -386,6 +647,7 @@ function saveProcess() {
   localStorage.setItem("darkroomProcesses", JSON.stringify(processes));
   currentProcessName = name;
   refreshProcessList();
+  addToHistory(name);
 }
   
 function refreshProcessList() {
@@ -409,8 +671,9 @@ function loadProcess() {
   temperature.value = p.temperature;
   pushPull.value = p.pushPull;
   notes.value = p.notes;
-  steps = p.steps;
+  steps = JSON.parse(JSON.stringify(p.steps));
   renderSteps();
+  updateTotalTime();
 }
 
 function deleteProcess() {
@@ -473,7 +736,8 @@ function exportCSV() {
     const stepText = p.steps.map(s => {
       const secs = (s.min * 60) + s.sec;
       totalSeconds += secs;
-      return `${s.name} ${s.min}:${String(s.sec).padStart(2,"0")}`;
+      const tip = s.tip ? ` [${s.tip}]` : "";
+      return `${s.name} ${s.min}:${String(s.sec).padStart(2,"0")}${tip}`;
     }).join(" | ");
 
     rows.push([
@@ -500,13 +764,114 @@ function exportCSV() {
   a.click();
 }
 
-addStep("Developer",8,0);
-addStep("Stop",0,30);
-addStep("Fix",5,0);
-addStep("Wash",10,0);
+function addToHistory(processName) {
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString().slice(0, 5);
+  const dateStr = now.toLocaleDateString();
+  history.unshift(`${dateStr} ${timeStr} - ${processName}`);
+  if (history.length > 20) history.pop();
+  localStorage.setItem("darkroomHistory", JSON.stringify(history));
+  updateHistory();
+}
+
+function updateHistory() {
+  const panel = document.getElementById("historyPanel");
+  if (history.length === 0) {
+    panel.innerHTML = "<div style='color:#666;text-align:center;'>No history yet</div>";
+    return;
+  }
+  panel.innerHTML = "<strong style='color:#0f0;'>Recent:</strong>";
+  history.slice(0, 10).forEach(entry => {
+    const item = document.createElement("div");
+    item.className = "history-item";
+    item.textContent = entry;
+    panel.appendChild(item);
+  });
+}
+
+function toggleTemplates() {
+  const box = document.getElementById("templatesBox");
+  box.style.display = box.style.display === "none" ? "block" : "none";
+}
+
+function loadTemplate(name) {
+  const template = templates[name];
+  if (!template) return;
+  
+  processType.value = template.type;
+  updateProcessNames(template.name);
+  steps = JSON.parse(JSON.stringify(template.steps));
+  renderSteps();
+  updateTotalTime();
+  toggleTemplates();
+}
+
+function printCard() {
+  if (steps.length === 0) {
+    alert("No steps to print");
+    return;
+  }
+  
+  let content = `
+    <html>
+    <head>
+      <title>Darkroom Card</title>
+      <style>
+        body { font-family: monospace; margin: 20px; line-height: 1.8; }
+        h1 { margin: 10px 0; }
+        .info { margin: 10px 0; border: 1px solid #000; padding: 10px; }
+        .step { margin: 8px 0; padding: 5px; border-left: 3px solid #000; padding-left: 10px; }
+        .tip { font-size: 0.9em; color: #666; }
+      </style>
+    </head>
+    <body>
+      <h1>${processName.value || currentProcessName || "Process"}</h1>
+      <div class="info">
+        <strong>Process:</strong> ${processName.value}<br>
+        <strong>Film/Paper:</strong> ${filmName.value}<br>
+        <strong>Developer:</strong> ${developerName.value}<br>
+        <strong>Temperature:</strong> ${temperature.value}°C<br>
+        <strong>Push/Pull:</strong> ${pushPull.value}
+      </div>
+      <h3>Steps:</h3>
+  `;
+  
+  steps.forEach((s, i) => {
+    content += `
+      <div class="step">
+        ${i + 1}. <strong>${s.name}</strong> - ${s.min}:${String(s.sec).padStart(2,"0")}
+        ${s.tip ? `<div class="tip">${s.tip}</div>` : ""}
+      </div>
+    `;
+  });
+  
+  content += `</body></html>`;
+  
+  const win = window.open();
+  win.document.write(content);
+  win.document.close();
+  setTimeout(() => win.print(), 250);
+}
+
+addStep("Developer",8,0,"Agitate every 30 sec");
+addStep("Stop",0,30,"");
+addStep("Fix",5,0,"");
+addStep("Wash",10,0,"Multiple rinses");
 refreshProcessList();
 updateProcessNames();
 renderSteps();
+updateTotalTime();
+updateHistory();
+pauseInterval = setInterval(updatePauseTime, 100);
+
+document.addEventListener("keydown", (e) => {
+  if (e.code === "Space") {
+    e.preventDefault();
+    if (!startBtn.disabled) start();
+    else if (!pauseBtn.disabled) pause();
+  }
+  if (e.code === "Escape") stopTimer();
+});
 
 </script>
 </body>
