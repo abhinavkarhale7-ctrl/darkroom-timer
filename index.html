@@ -248,7 +248,6 @@ function removeStep(i) {
 }
 
 function renderSteps() {
-  function renderSteps() {
   const box = document.getElementById("steps");
   box.innerHTML = "";
 
@@ -288,9 +287,9 @@ function start() {
   timerIndex = 0;
   nextStep();
   startBtn.disabled = true;
-pauseBtn.disabled = false;
-pauseBtn.textContent = "Pause";
-timer.className = "timer running";
+  pauseBtn.disabled = false;
+  pauseBtn.textContent = "Pause";
+  timer.className = "timer running";
 }
 
 function nextStep() {
@@ -322,15 +321,14 @@ function tick() {
     nextStep();
   }
   if (remaining <= 10 && remaining > 0) {
-  timer.style.transform = "scale(1.15)";
-} else {
-  timer.style.transform = "scale(1)";
-}
+    timer.style.transform = "scale(1.15)";
+  } else {
+    timer.style.transform = "scale(1)";
+  }
   remaining--;
 }
 
 function pause() {
-  function pause() {
   if (interval) {
     clearInterval(interval);
     interval = null;
@@ -349,8 +347,8 @@ function stopTimer() {
   document.getElementById("timer").innerText="00:00";
   document.getElementById("currentStep").innerText="";
   startBtn.disabled = false;
-pauseBtn.textContent = "Pause";
-timer.className = "timer";
+  pauseBtn.textContent = "Pause";
+  timer.className = "timer";
 }
 
 function vibrate() {
@@ -405,7 +403,8 @@ function loadProcess() {
   steps = p.steps;
   renderSteps();
 }
-  function deleteProcess() {
+
+function deleteProcess() {
   const name = savedProcesses.value;
   if (!name) {
     alert("No process selected");
@@ -445,6 +444,7 @@ fileInput.onchange = e => {
   };
   r.readAsText(file);
 };
+
 function exportCSV() {
   const rows = [];
   rows.push([
@@ -490,6 +490,7 @@ function exportCSV() {
   a.download = "darkroom-log.csv";
   a.click();
 }
+
 addStep("Developer",8,0);
 addStep("Stop",0,30);
 addStep("Fix",5,0);
@@ -497,8 +498,7 @@ addStep("Wash",10,0);
 refreshProcessList();
 updateProcessNames();
 renderSteps();
-}
-  }
+
 </script>
 </body>
 </html>
