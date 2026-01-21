@@ -130,7 +130,8 @@ hr {
 
 <div class="row">
   <button class="secondary" onclick="deleteProcess()">Delete</button>
-  <button class="secondary" onclick="exportProcess()">Export</button>
+  <button class="secondary" onclick="exportCSV()">Export CSV</button>
+  <button class="secondary" onclick="exportProcess()">Export JSON</button>
   <button class="secondary" onclick="importProcess()">Import</button>
 </div>
 
@@ -303,7 +304,51 @@ fileInput.onchange = e => {
   };
   r.readAsText(file);
 };
+function exportCSV() {
+  const rows = [];
+  rows.push([
+    "Process Name",
+    "Process Type",
+    "Film / Paper",
+    "Developer",
+    "Temperature",
+    "Push / Pull",
+    "Notes",
+    "Steps",
+    "Total Time (min)"
+  ]);
 
+  Object.entries(processes).forEach(([name, p]) => {
+    let totalSeconds = 0;
+    const stepText = p.steps.map(s => {
+      const secs = (s.min * 60) + s.sec;
+      totalSeconds += secs;
+      return `${s.name} ${s.min}:${String(s.sec).padStart(2,"0")}`;
+    }).join(" | ");
+
+    rows.push([
+      name,
+      p.processType || "",
+      p.filmName || "",
+      p.developerName || "",
+      p.temperature || "",
+      p.pushPull || "",
+      (p.notes || "").replace(/\n/g," "),
+      stepText,
+      Math.round(totalSeconds / 60)
+    ]);
+  });
+
+  const csv = rows.map(r =>
+    r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",")
+  ).join("\n");
+
+  const blob = new Blob([csv], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "darkroom-log.csv";
+  a.click();
+}
 addStep("Developer",8,0);
 addStep("Stop",0,30);
 addStep("Fix",5,0);
