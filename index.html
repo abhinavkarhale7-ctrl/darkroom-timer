@@ -939,68 +939,89 @@ fileInput.onchange = e => {
   r.readAsText(file);
 };
 
+// Export CSV - only "All Saved Processes" as requested.
+// Each saved process becomes one CSV row. Steps are expanded into columns:
+// Step 1 Name, Step 1 Duration, Step 1 Tip, Step 2 Name, ...
 function exportCSV() {
-  const rows = [];
-  
-  // Current process info
-  rows.push(["CURRENT PROCESS"]);
-  rows.push(["Process Name", processName.value || "N/A"]);
-  rows.push(["Type", processType.value || "N/A"]);
-  rows.push(["Film/Paper", filmName.value || "N/A"]);
-  rows.push(["Developer", developerName.value || "N/A"]);
-  rows.push(["Temperature (°C)", temperature.value || "N/A"]);
-  rows.push(["Push/Pull", pushPull.value || "N/A"]);
-  rows.push(["Notes", (notes.value || "N/A").replace(/\n/g, " | ")]);
-  rows.push([]);
-  
-  // Steps
-  rows.push(["STEPS"]);
-  rows.push(["Step #", "Name", "Duration (MM:SS)", "Tip"]);
-  steps.forEach((s, i) => {
-    const duration = formatTime(s.min * 60 + s.sec);
-    rows.push([
-      i + 1,
-      s.name,
-      duration,
-      s.tip || ""
-    ]);
-  });
-  
-  const totalSec = steps.reduce((sum, s) => sum + (s.min * 60 + s.sec), 0);
-  rows.push([]);
-  rows.push(["Total Time", formatTime(totalSec)]);
-  rows.push([]);
-  
-  // All saved processes
-  rows.push(["ALL SAVED PROCESSES"]);
-  rows.push(["Name", "Type", "Film/Paper", "Developer", "Temp", "Push/Pull", "Total Time", "Steps"]);
-  
-  Object.entries(processes).forEach(([name, p]) => {
-    let totalSeconds = 0;
-    const stepText = p.steps.map((s, idx) => {
-      const secs = s.min * 60 + s.sec;
-      totalSeconds += secs;
-      return `${idx + 1}. ${s.name} (${formatTime(secs)})${s.tip ? " - " + s.tip : ""}`;
-    }).join(" | ");
+  const processEntries = Object.entries(processes);
+  if (!processEntries.length) {
+    alert("No saved processes to export.");
+    return;
+  }
 
-    rows.push([
-      name,
-      p.processType || "",
-      p.filmName || "",
-      p.developerName || "",
-      p.temperature || "",
-      p.pushPull || "",
-      formatTime(totalSeconds),
-      stepText
-    ]);
+  // Determine maximum number of steps across saved processes
+  const maxSteps = processEntries.reduce((max, [, p]) => {
+    return Math.max(max, (p.steps || []).length);
+  }, 0);
+
+  // Build header
+  const header = [
+    "Name",
+    "Type",
+    "Film/Paper",
+    "Developer",
+    "Temp",
+    "Push/Pull",
+    "Total Time",
+    "Notes"
+  ];
+
+  // Add step columns for up to maxSteps
+  for (let i = 1; i <= maxSteps; i++) {
+    header.push(`Step ${i} Name`);
+    header.push(`Step ${i} Duration`);
+    header.push(`Step ${i} Tip`);
+  }
+
+  const rows = [header];
+
+  // Add a row per saved process
+  processEntries.forEach(([name, p]) => {
+    const row = [];
+    const stepsArr = p.steps || [];
+    const totalSec = stepsArr.reduce((s, st) => s + ((st.min || 0) * 60 + (st.sec || 0)), 0);
+
+    row.push(name);
+    row.push(p.processType || "");
+    row.push(p.filmName || "");
+    row.push(p.developerName || "");
+    row.push(p.temperature || "");
+    row.push(p.pushPull || "");
+    row.push(formatTime(totalSec));
+    row.push((p.notes || "").replace(/\r?\n/g, " | "));
+
+    // Add step columns (empty if not present)
+    for (let i = 0; i < maxSteps; i++) {
+      const s = stepsArr[i];
+      if (s) {
+        row.push(s.name || "");
+        row.push(formatTime((s.min || 0) * 60 + (s.sec || 0)));
+        row.push(s.tip || "");
+      } else {
+        row.push("");
+        row.push("");
+        row.push("");
+      }
+    }
+
+    rows.push(row);
   });
 
-  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  // Convert to CSV with proper quoting
+  const csvContent = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+
+  // Prepend UTF-8 BOM to improve Excel compatibility
+  const bom = "\uFEFF";
+  const blob = new Blob([bom + csvContent], { type: "text/csv;charset=utf-8;" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `darkroom-${processName.value || "process"}-${new Date().toISOString().split('T')[0]}.csv`;
+  a.download = `darkroom-saved-processes-${new Date().toISOString().split('T')[0]}.csv`;
   a.click();
+}
+
+function exportCSVFlat() {
+  // kept for compatibility if needed in future — currently exportCSV meets the requested format
+  exportCSV();
 }
 
 function exportPDF() {
