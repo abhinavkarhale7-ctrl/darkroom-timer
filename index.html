@@ -1057,44 +1057,23 @@ fileInput.onchange = e => {
 
 function exportCSV() {
   const rows = [];
-  
-  // Current process info
-  rows.push(["CURRENT PROCESS"]);
-  rows.push(["Process Name", processName.value || "N/A"]);
-  rows.push(["Type", processType.value || "N/A"]);
-  rows.push(["Film/Paper", filmName.value || "N/A"]);
-  rows.push(["Developer", developerName.value || "N/A"]);
-  rows.push(["Temperature (°C)", temperature.value || "N/A"]);
-  rows.push(["Push/Pull", pushPull.value || "N/A"]);
-  rows.push(["Notes", (notes.value || "N/A").replace(/\n/g, " | ")]);
-  rows.push([]);
-  
-  // Steps
-  rows.push(["STEPS"]);
-  rows.push(["Step #", "Name", "Duration (MM:SS)", "Tip"]);
-  steps.forEach((s, i) => {
-    const duration = formatTime(s.min * 60 + s.sec);
-    rows.push([
-      i + 1,
-      s.name,
-      duration,
-      s.tip || ""
-    ]);
-  });
-  
-  const totalSec = steps.reduce((sum, s) => sum + (s.min * 60 + s.sec), 0);
-  rows.push([]);
-  rows.push(["Total Time", formatTime(totalSec)]);
-  rows.push([]);
-  
-  // All saved processes
-  rows.push(["ALL SAVED PROCESSES"]);
-  rows.push(["Name", "Type", "Film/Paper", "Developer", "Temp", "Push/Pull", "Total Time", "Steps"]);
-  
+  // Header row
+  rows.push([
+    "Process Name",
+    "Type",
+    "Film/Paper",
+    "Developer",
+    "Temperature (°C)",
+    "Push/Pull",
+    "Notes",
+    "Total Time",
+    "Steps"
+  ]);
+
   Object.entries(processes).forEach(([name, p]) => {
     let totalSeconds = 0;
-    const stepText = p.steps.map((s, idx) => {
-      const secs = s.min * 60 + s.sec;
+    const stepText = (p.steps || []).map((s, idx) => {
+      const secs = (s.min || 0) * 60 + (s.sec || 0);
       totalSeconds += secs;
       return `${idx + 1}. ${s.name} (${formatTime(secs)})${s.tip ? " - " + s.tip : ""}`;
     }).join(" | ");
@@ -1106,6 +1085,7 @@ function exportCSV() {
       p.developerName || "",
       p.temperature || "",
       p.pushPull || "",
+      (p.notes || "").replace(/\n/g, " | "),
       formatTime(totalSeconds),
       stepText
     ]);
@@ -1115,7 +1095,7 @@ function exportCSV() {
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `darkroom-${processName.value || "process"}-${new Date().toISOString().split('T')[0]}.csv`;
+  a.download = `darkroom-processes-${new Date().toISOString().split('T')[0]}.csv`;
   a.click();
 }
 
