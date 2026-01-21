@@ -31,15 +31,19 @@
     --max-width: 960px;
   }
 
+  /* Day mode: white background, darker outlines/text per request */
   body.theme-light{
-    --bg: #f6f7fb;
+    --bg: #ffffff;           /* background white */
     --panel: #ffffff;
-    --muted: #6b7280;
-    --accent: #6a5aa8;
-    --accent-strong: #4f3f86;
-    --border: #e6e6e9;
-    --text: #0b0b0b;
-    --input-bg: #fbfbfd;
+    --muted: #51525a;        /* slightly darker muted */
+    --accent: #9d84b7;       /* keep accent */
+    --accent-strong: #7c5aa8;
+    --success: #16a34a;
+    --warning: #b45309;
+    --danger: #b91c1c;
+    --border: #444444;       /* darker outlines */
+    --text: #111827;         /* darker text */
+    --input-bg: #ffffff;
   }
 
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -137,7 +141,7 @@
   .action-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
   .action-row .save-full { grid-column: 1 / -1; }
 
-  .theme-toggle { position:fixed; right:10px; top:10px; width:36px; height:36px; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--text); display:inline-flex; align-items:center; justify-content:center; font-size:16px; z-index:1000; }
+  .theme-toggle { position:fixed; right:10px; top:10px; width:36px; height:36px; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--text); display:inline-flex; align-items:center; justify-content:center; font-size:16px; z-index:100000; }
 
   @media (max-width: 480px) {
     .controls-row {
@@ -154,12 +158,16 @@
   .page { display: none; }
   .page.active { display: block; }
 
+  /* pause info small text */
+  .pause-info { text-align:center; margin-bottom:6px; color:var(--muted); font-size:13px; display:none; }
+
 </style>
 </head>
 <body>
-  <div class="app">
-    <button id="themeToggle" class="theme-toggle" title="Toggle light/dark" onclick="toggleTheme()">🌙</button>
+  <!-- Theme toggle moved outside .app to keep it fixed and not affected by transforms -->
+  <button id="themeToggle" class="theme-toggle" title="Toggle light/dark" onclick="toggleTheme()">🌙</button>
 
+  <div class="app">
     <h1>Darkroom Process Timer</h1>
 
     <div class="tabs">
@@ -167,7 +175,7 @@
       <button id="tabTimer" class="tab-btn" onclick="switchTo('timer')">Timer</button>
     </div>
 
-    <!-- Editor page: all inputs, steps, saved processes, and file actions -->
+    <!-- Editor page -->
     <div id="editorPage" class="page active">
       <div class="panel" id="editorPanel">
         <label>Process type</label>
@@ -230,7 +238,6 @@
           <button class="control-btn secondary" onclick="importProcess()">Import JSON</button>
           <button class="control-btn secondary" onclick="exportProcess()">Export JSON</button>
           <button class="control-btn secondary" onclick="printCard()">Print</button>
-          <!-- New Reset button (resets entered inputs only) -->
           <button class="control-btn secondary" onclick="resetInputs()">Reset Inputs</button>
         </div>
 
@@ -247,10 +254,14 @@
       </div>
     </div>
 
-    <!-- Timer page: timer display + current step + controls -->
+    <!-- Timer page -->
     <div id="timerPage" class="page">
       <div class="panel" id="timerPanel">
         <div class="current" id="currentStep">Ready</div>
+
+        <!-- pause info shown while paused -->
+        <div id="pauseInfo" class="pause-info">⏸ Paused: 00:00</div>
+
         <div style="text-align:center;font-size:12px;color:var(--muted);margin-bottom:6px;">
           <span id="stepCounter">-</span>
         </div>
@@ -299,6 +310,7 @@
     document.getElementById('stepCounter').innerText = isRunning ? `${Math.min(steps.length, timerIndex + 1)}/${steps.length}` : '-';
     document.getElementById('timer').innerText = formatTime(Math.max(0, Math.ceil(remainingSeconds)));
     if (!isRunning && timerIndex === 0) document.getElementById('bar').style.width = '0%';
+    updatePauseTime(); // ensure pause info in sync
   }
 
   // DOM refs (shared between pages)
@@ -320,6 +332,7 @@
   const totalTimeEl = document.getElementById("totalTime");
   const stepCounter = document.getElementById("stepCounter");
   const themeToggle = document.getElementById("themeToggle");
+  const pauseInfoEl = document.getElementById("pauseInfo");
 
   // State (unchanged)
   let currentProcessName = null;
@@ -331,8 +344,8 @@
   let audioEnabled = localStorage.getItem("darkroomAudio") !== "false";
   let isRunning = false;
   let isPaused = false;
-  let pausedSeconds = 0;
-  let pauseStartTime = null;
+  let pausedSeconds = 0;      // accumulated paused seconds
+  let pauseStartTime = null;  // timestamp when pause started
   let wakelock = null;
   let history = JSON.parse(localStorage.getItem("darkroomHistory")) || [];
   let processes = JSON.parse(localStorage.getItem("darkroomProcesses")) || {};
@@ -421,6 +434,7 @@
     updateProcessNames();
     renderSteps();
     updateTotalTime();
+    // start updating pause info regularly
     pauseInterval = setInterval(updatePauseTime,200);
     updateUIState();
     document.getElementById("audioToggle").style.opacity = audioEnabled ? "1" : "0.5";
@@ -513,7 +527,16 @@
     totalTimeEl.innerText = `Total: ${formatTime(total)}`;
   }
 
-  function updateUpcomingSteps(){ /* minimal on mobile */ }
+  // NEW: updatePauseTime - shows elapsed paused time while paused
+  function updatePauseTime(){
+    if (isPaused && pauseStartTime) {
+      const elapsed = pausedSeconds + Math.floor((Date.now() - pauseStartTime) / 1000);
+      pauseInfoEl.style.display = "block";
+      pauseInfoEl.innerText = `⏸ Paused: ${formatTime(elapsed)}`;
+    } else {
+      pauseInfoEl.style.display = "none";
+    }
+  }
 
   async function start(){
     if(!steps.length){ alert("Add at least one step first"); return; }
@@ -521,7 +544,6 @@
     updateUIState();
     try { if("wakeLock" in navigator) wakelock = await navigator.wakeLock.request("screen"); } catch(e){ wakelock = null; }
     nextStep();
-    // switch automatically to timer page when starting
     switchTo('timer');
   }
 
@@ -560,17 +582,32 @@
 
   function pause(){
     if(!isRunning) return;
-    if(!isPaused){ clearInterval(timerInterval); isPaused = true; pauseStartTime = Date.now(); }
-    else { if(pauseStartTime) pausedSeconds += Math.floor((Date.now() - pauseStartTime)/1000); isPaused = false; timerInterval = setInterval(tick,100); }
+    if(!isPaused){
+      // entering pause
+      clearInterval(timerInterval);
+      isPaused = true;
+      pauseStartTime = Date.now();
+      // show pause immediately
+      updatePauseTime();
+    } else {
+      // resuming
+      if (pauseStartTime) pausedSeconds += Math.floor((Date.now() - pauseStartTime) / 1000);
+      pauseStartTime = null;
+      isPaused = false;
+      timerInterval = setInterval(tick,100);
+      // hide pause info
+      updatePauseTime();
+    }
     updateUIState();
   }
 
   function stopTimer(){
     if(timerInterval) clearInterval(timerInterval);
     isRunning = false; isPaused = false;
-    timerEl.innerText = "00:00"; currentStepEl.innerText = "Ready"; stepCounter.innerText = '-'; pausedSeconds = 0; bar.style.width='0%';
+    timerEl.innerText = "00:00"; currentStepEl.innerText = "Ready"; stepCounter.innerText = '-'; pausedSeconds = 0; pauseStartTime = null; bar.style.width='0%';
     if(wakelock){ wakelock.release().catch(()=>{}); wakelock=null; }
     updateUIState();
+    updatePauseTime();
   }
 
   function endTimer(){
@@ -583,6 +620,7 @@
     stepCounter.innerText = 'Done';
     updateUIState();
     addToHistory(currentProcessName || 'Quick Process');
+    updatePauseTime();
   }
 
   function vibrate(){ if(navigator.vibrate) navigator.vibrate([50,30,50]); }
@@ -660,15 +698,12 @@
 
   function printCard(){ if(!steps.length){ alert('Add steps first'); return; } let html = '<!doctype html><html><head><meta charset="utf-8"><title>Darkroom Card</title><style>body{font-family:monospace;padding:20px}h1{font-size:18px}.step{margin:8px 0}</style></head><body>'; html += `<h1>${processName.value || currentProcessName || 'Process'}</h1>`; html += `<div><strong>Film/Paper:</strong> ${filmName.value || '-'}<br><strong>Developer:</strong> ${developerName.value || '-'}<br><strong>Temp:</strong> ${temperature.value || '-'}°C</div>`; html += '<h3>Steps</h3>'; steps.forEach((s,i)=>{ html += `<div class="step"><strong>${i+1}. ${s.name || ''}</strong> — ${formatTime((s.min||0)*60 + (s.sec||0))}${s.tip ? `<div>${s.tip}</div>` : ''}</div>`; }); html += '</body></html>'; const w = window.open(); w.document.write(html); w.document.close(); setTimeout(()=>w.print(),200); }
 
-  function addToHistory(name){ const now = new Date(); history.unshift(`${now.toLocaleDateString()} ${now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} - ${name}`); if(history.length>200) history.length=200; localStorage.setItem('darkroomHistory', JSON.stringify(history)); }
-
-  // NEW: resetInputs - clears entered input only (does NOT touch saved processes, theme, audio, history)
+  // resetInputs function (already present previously) - kept unchanged
   function resetInputs() {
     if (!confirm("Reset all entered inputs? This will clear current form fields and steps but will NOT delete saved processes.")) return;
 
     currentProcessName = null;
 
-    // reset selects/fields to defaults
     processType.value = "Film";
     updateProcessNames();
     processName.selectedIndex = 0;
@@ -679,7 +714,6 @@
     pushPull.value = "Normal";
     notes.value = "";
 
-    // reset steps to default starter steps
     steps = [];
     addStep("Developer", 8, 0, "Agitate every 30 sec");
     addStep("Stop", 0, 30, "");
@@ -689,21 +723,20 @@
     renderSteps();
     updateTotalTime();
 
-    // ensure timer UI reflects reset state
     timerIndex = 0;
     remainingSeconds = 0;
     if (timerInterval) {
       clearInterval(timerInterval);
       timerInterval = null;
     }
-    // update timer page visuals if visible
     renderTimerUI();
 
     alert("Inputs have been reset.");
   }
 
-  function updatePauseTime(){ /* placeholder kept for compatibility (no UI) */ }
+  function addToHistory(name){ const now = new Date(); history.unshift(`${now.toLocaleDateString()} ${now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} - ${name}`); if(history.length>200) history.length=200; localStorage.setItem('darkroomHistory', JSON.stringify(history)); }
 
+  // keyboard & touch
   document.addEventListener('keydown', e => { if(e.code === 'Space'){ e.preventDefault(); if(!isRunning) start(); else pause(); } if(e.code === 'Escape') stopTimer(); });
   document.addEventListener('touchmove', e => { if(isRunning) e.preventDefault(); }, {passive:false});
 
