@@ -27,50 +27,34 @@ html, body {
 }
 
 .app {
-  max-width: 900px; /* wider for desktop */
+  max-width: 900px;
   margin: 20px auto;
   padding: 12px;
 }
 
-/* Grid layout for larger screens */
+/* layout */
 .app-grid {
   display: block;
   gap: 18px;
 }
-
 @media (min-width: 820px) {
   .app-grid {
     display: grid;
-    grid-template-columns: 1fr 340px; /* main + sidebar */
+    grid-template-columns: 1fr 340px;
     align-items: start;
     gap: 20px;
   }
 }
 
-/* Main column */
-.main {
-  background: transparent;
-}
-
-/* Sidebar */
-.sidebar {
-  background: transparent;
-}
-
-/* Headings and labels */
+/* headings & basic form */
 h1 {
   text-align: center;
   font-size: 20px;
   margin: 6px 0 14px 0;
 }
 
-label {
-  display: block;
-  font-size: 12px;
-  margin-bottom: 4px;
-}
+label { display:block; font-size:12px; margin-bottom:4px; }
 
-/* Form controls */
 input, select, textarea, button {
   width: 100%;
   margin-bottom: 8px;
@@ -83,15 +67,12 @@ input, select, textarea, button {
   outline: none;
 }
 
-textarea {
-  resize: vertical;
-  min-height: 64px;
-}
+textarea { resize: vertical; min-height: 64px; }
 
-/* Buttons */
+/* buttons */
 button {
-  min-height: 44px;
-  font-size: 15px;
+  min-height: 40px;
+  font-size: 14px;
   background: #9d84b7;
   color: #000;
   cursor: pointer;
@@ -99,7 +80,6 @@ button {
   border: none;
   border-radius: 6px;
 }
-
 button:active { transform: translateY(1px); }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -109,35 +89,28 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   border: 1px solid #3d3d3d;
 }
 
-/* Controls row - restores previous button sizing (Start larger) */
+/* controls layout (Start bigger) */
 .controls-row {
   display: flex;
   gap: 8px;
   align-items: center;
 }
 
-.controls-row .start-btn {
-  flex: 2 1 0;
-  min-width: 120px;
-}
+.controls-row .start-btn { flex: 2 1 0; min-width: 120px; }
+.controls-row button:not(.start-btn), .controls-row .audio-toggle { flex: 1 1 0; }
 
-.controls-row button:not(.start-btn),
-.controls-row .audio-toggle {
-  flex: 1 1 0;
-}
-
-/* Rows and responsive controls */
-.row {
+/* action-row (Save / Import / JSON / Print) - side-by-side layout */
+.action-row {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
 }
-
-.row > button, .row > .audio-toggle {
-  flex: 1 1 auto;
+.action-row button {
+  flex: 1 1 48%;
+  min-width: 120px;
 }
 
-/* Step list */
+/* step list */
 .step {
   display: flex;
   gap: 8px;
@@ -145,22 +118,33 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   align-items: center;
 }
 
+/* step inputs: name should have more space; min/sec fixed small width; tip flexible */
 .step-inputs {
   display: flex;
   gap: 8px;
   flex: 1;
   align-items: center;
 }
+.step-inputs input[type="text"] { flex: 2 1 0; min-width: 140px; }
+.step-inputs input.step-tip { flex: 1 1 0; }
 
-.step-inputs input[type="text"], .step-inputs input[type="number"] {
-  padding: 8px;
+.step-inputs input[type="number"] { width: 64px; padding: 8px; }
+
+/* small remove button so the name doesn't get pushed out */
+.step-delete {
+  width: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 6px;
   border-radius: 6px;
-  background: #151515;
-  border: 1px solid #333;
-  color: #d0d0d0;
+  font-size: 14px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* timer and visual areas */
+/* timer & visual */
 .timer {
   text-align: center;
   font-size: 44px;
@@ -170,11 +154,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   transition: color 0.2s, transform 0.12s;
   letter-spacing: -2px;
 }
-
-@media (min-width: 820px) {
-  .timer { font-size: 56px; }
-}
-
+@media (min-width: 820px) { .timer { font-size: 56px; } }
 .timer.running { color: #4ade80; }
 .timer.paused { color: #fbbf24; }
 .timer.done { color: #ff6b6b; }
@@ -209,39 +189,15 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   overflow-y: auto;
   border-radius: 6px;
 }
-
 .upcoming-item { padding: 6px 0; color: #aaa; }
 .upcoming-item.next { color: #4ade80; font-weight: 700; }
-
 .step-tip { font-size: 11px; color: #9aa; margin-top: 6px; }
 
-/* History and saved list */
-.history-panel {
-  background: #0f0f0f;
-  border: 1px solid #2f2a3f;
-  padding: 10px;
-  border-radius: 8px;
-  margin-bottom: 8px;
-  font-size: 13px;
-  max-height: 320px;
-  overflow-y: auto;
-}
-
-.history-item {
-  padding: 8px;
-  border-bottom: 1px solid #222;
-  color: #bbb;
-}
-.history-item:last-child { border-bottom: none; }
-
-/* Progress bar */
+/* progress */
 #progress { height: 14px; background: #1a1a1a; border-radius: 6px; overflow: hidden; border: 1px solid #2b2b2b; }
 #bar { height: 100%; width: 0%; background: #9d84b7; transition: width 0.08s linear; }
 
-/* small controls */
-.audio-toggle { width: auto; padding: 6px 12px; font-size: 13px; min-height: 40px; }
-
-/* Compact adjustments on very small screens */
+/* responsiveness */
 @media (max-width: 420px) {
   body { padding: 6px; }
   .app { margin: 6px; padding: 6px; }
@@ -249,7 +205,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   .timer { font-size: 48px; }
 }
 
-/* Accessibility: focus styles */
+/* focus */
 button:focus, input:focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 3px rgba(157,132,183,0.16);
   border-color: #a98ac3;
@@ -316,7 +272,6 @@ button:focus, input:focus, select:focus, textarea:focus {
         <div id="bar"></div>
       </div>
 
-      <!-- Controls: restored button sizing like previous layout (Start larger) -->
       <div class="controls-row" style="margin-top:10px;">
         <button id="startBtn" class="start-btn" onclick="start()">Start</button>
         <button id="pauseBtn" class="secondary" onclick="pause()">Pause</button>
@@ -326,12 +281,13 @@ button:focus, input:focus, select:focus, textarea:focus {
 
       <hr>
 
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <div class="action-row" style="margin-bottom:8px;">
         <button onclick="saveProcess()">Save Process</button>
-        <button class="secondary" onclick="importProcess()">Import</button>
-        <button class="secondary" onclick="exportProcess()">JSON</button>
+        <button class="secondary" onclick="importProcess()">Import JSON</button>
+        <button class="secondary" onclick="exportProcess()">Export JSON</button>
         <button class="secondary" onclick="printCard()">Print</button>
       </div>
+
     </div>
 
     <aside class="sidebar">
@@ -345,8 +301,7 @@ button:focus, input:focus, select:focus, textarea:focus {
       </div>
 
       <hr>
-
-      <div class="history-panel" id="historyPanel"></div>
+      <!-- history section removed per request -->
     </aside>
   </div>
 
@@ -384,10 +339,11 @@ let isPaused = false;
 let pausedSeconds = 0;
 let pauseStartTime = null;
 let wakelock = null;
+// keep history data in storage but UI removed
 let history = JSON.parse(localStorage.getItem("darkroomHistory")) || [];
 let processes = JSON.parse(localStorage.getItem("darkroomProcesses")) || {};
 
-// ===== Process Configuration (kept for process name choices) =====
+// ===== Process Options =====
 const processOptions = {
   "Film": ["C-41", "ECN-2", "E-6", "B&W", "B&W Reversal"],
   "Printing": ["B&W Contact Printing", "RA-4 Contact Printing", "B&W Reversal Printing", "RA-4 Reversal Printing"],
@@ -404,13 +360,12 @@ function init() {
   updateProcessNames();
   renderSteps();
   updateTotalTime();
-  updateHistory();
   pauseInterval = setInterval(updatePauseTime, 200);
   updateUIState();
   document.getElementById("audioToggle").style.opacity = audioEnabled ? "1" : "0.5";
 }
 
-// ===== UI Helper Functions =====
+// ===== Helpers =====
 function formatTime(seconds) {
   const total = Math.max(0, Math.floor(seconds));
   const m = Math.floor(total / 60);
@@ -426,7 +381,7 @@ function updateUIState() {
   stopBtn.disabled = !timerRunning && !isPaused;
 }
 
-// ===== Step Management =====
+// ===== Steps =====
 function addStep(name = "", min = 0, sec = 0, tip = "") {
   steps.push({ name, min, sec, tip });
   renderSteps();
@@ -451,11 +406,11 @@ function renderSteps() {
     inputsDiv.className = "step-inputs";
 
     const nameInput = document.createElement("input");
+    nameInput.type = "text";
     nameInput.placeholder = "Step name";
     nameInput.value = s.name;
     nameInput.disabled = isRunning;
     nameInput.oninput = e => { steps[i].name = e.target.value; updateUpcomingSteps(); };
-    nameInput.type = "text";
 
     const minInput = document.createElement("input");
     minInput.type = "number";
@@ -463,7 +418,7 @@ function renderSteps() {
     minInput.value = s.min;
     minInput.disabled = isRunning;
     minInput.min = "0";
-    minInput.style.width = "72px";
+    minInput.className = "step-min";
     minInput.oninput = e => { steps[i].min = Math.max(0, Number(e.target.value)); updateTotalTime(); };
 
     const secInput = document.createElement("input");
@@ -473,13 +428,15 @@ function renderSteps() {
     secInput.disabled = isRunning;
     secInput.min = "0";
     secInput.max = "59";
-    secInput.style.width = "72px";
+    secInput.className = "step-sec";
     secInput.oninput = e => { steps[i].sec = Math.max(0, Math.min(59, Number(e.target.value))); updateTotalTime(); };
 
     const tipInput = document.createElement("input");
+    tipInput.type = "text";
     tipInput.placeholder = "Tip (e.g. Agitate every 30 sec)";
     tipInput.value = s.tip || "";
     tipInput.disabled = isRunning;
+    tipInput.className = "step-tip";
     tipInput.oninput = e => { steps[i].tip = e.target.value; };
 
     inputsDiv.appendChild(nameInput);
@@ -489,9 +446,9 @@ function renderSteps() {
 
     const btn = document.createElement("button");
     btn.className = "step-delete secondary";
-    btn.textContent = "Remove";
+    btn.title = "Remove step";
+    btn.innerText = "✕";
     btn.disabled = isRunning;
-    btn.style.minWidth = "84px";
     btn.onclick = () => removeStep(i);
 
     div.appendChild(inputsDiv);
@@ -500,12 +457,10 @@ function renderSteps() {
   });
 }
 
-// ===== Total Time & Upcoming Steps =====
+// ===== Totals & Upcoming =====
 function updateTotalTime() {
   let totalSec = 0;
-  steps.forEach(s => {
-    totalSec += (s.min || 0) * 60 + (s.sec || 0);
-  });
+  steps.forEach(s => { totalSec += (s.min||0) * 60 + (s.sec||0); });
   document.getElementById("totalTime").innerText = `Total: ${formatTime(totalSec)}`;
 }
 
@@ -516,19 +471,18 @@ function updateUpcomingSteps() {
   if (timerIndex < steps.length && isRunning) {
     const current = steps[timerIndex];
     const tip = current.tip || "";
-    const currentTime = formatTime((current.min || 0) * 60 + (current.sec || 0));
+    const currentTime = formatTime((current.min||0) * 60 + (current.sec||0));
     upcoming.innerHTML = `<div class="upcoming-item next">▶ ${current.name} (${currentTime})${tip ? "<br><small class='step-tip'>" + tip + "</small>" : ""}</div>`;
 
     for (let i = timerIndex + 1; i < Math.min(timerIndex + 4, steps.length); i++) {
       const s = steps[i];
-      const stepTime = formatTime((s.min || 0) * 60 + (s.sec || 0));
+      const stepTime = formatTime((s.min||0) * 60 + (s.sec||0));
       upcoming.innerHTML += `<div class="upcoming-item">${s.name} (${stepTime})</div>`;
     }
   } else if (!isRunning) {
-    // show next few steps from start
     for (let i = 0; i < Math.min(3, steps.length); i++) {
       const s = steps[i];
-      const stepTime = formatTime((s.min || 0) * 60 + (s.sec || 0));
+      const stepTime = formatTime((s.min||0) * 60 + (s.sec||0));
       upcoming.innerHTML += `<div class="upcoming-item">${s.name} (${stepTime})</div>`;
     }
   }
@@ -543,43 +497,24 @@ function getStepColor(name) {
   return "";
 }
 
-// ===== Timer Control =====
+// ===== Timer control =====
 async function start() {
-  if (!steps.length) {
-    alert("Add at least one step first");
-    return;
-  }
+  if (!steps.length) { alert("Add at least one step first"); return; }
+  isRunning = true; isPaused = false; timerIndex = 0; pausedSeconds = 0;
+  updateUIState(); updateUpcomingSteps();
 
-  isRunning = true;
-  isPaused = false;
-  timerIndex = 0;
-  pausedSeconds = 0;
-  updateUIState();
-  updateUpcomingSteps();
-
-  // Request wake lock
-  try {
-    if ("wakeLock" in navigator) {
-      wakelock = await navigator.wakeLock.request("screen");
-    }
-  } catch (err) {
-    console.log("Wake lock failed:", err);
-    wakelock = null;
-  }
+  try { if ("wakeLock" in navigator) wakelock = await navigator.wakeLock.request("screen"); }
+  catch (err) { console.log("Wake lock failed:", err); wakelock = null; }
 
   nextStep();
 }
 
 function nextStep() {
   if (timerInterval) clearInterval(timerInterval);
-
-  if (timerIndex >= steps.length) {
-    endTimer();
-    return;
-  }
+  if (timerIndex >= steps.length) { endTimer(); return; }
 
   const s = steps[timerIndex];
-  remainingSeconds = (s.min || 0) * 60 + (s.sec || 0);
+  remainingSeconds = (s.min||0) * 60 + (s.sec||0);
 
   currentStep.innerText = s.name || "Step";
   currentStep.className = "current " + getStepColor(s.name || "");
@@ -599,7 +534,7 @@ function nextStep() {
 
   bar.style.width = "0%";
   tick();
-  timerInterval = setInterval(tick, 100); // 100ms for smooth progress
+  timerInterval = setInterval(tick, 100);
   updateUpcomingSteps();
 }
 
@@ -613,11 +548,8 @@ function tick() {
   const progress = (elapsed / totalSeconds) * 100;
   bar.style.width = Math.max(0, Math.min(100, progress)) + "%";
 
-  if (displaySeconds <= 10 && displaySeconds > 0) {
-    timer.style.transform = `scale(${1 + (displaySeconds % 2) * 0.04})`;
-  } else {
-    timer.style.transform = "scale(1)";
-  }
+  if (displaySeconds <= 10 && displaySeconds > 0) timer.style.transform = `scale(${1 + (displaySeconds % 2) * 0.04})`;
+  else timer.style.transform = "scale(1)";
 
   remainingSeconds -= 0.1;
 
@@ -633,7 +565,6 @@ function tick() {
 
 function pause() {
   if (!isRunning) return;
-
   if (!isPaused) {
     clearInterval(timerInterval);
     isPaused = true;
@@ -642,40 +573,27 @@ function pause() {
     document.getElementById("pauseTime").style.display = "block";
     document.getElementById("pauseTime").style.opacity = "1";
   } else {
-    if (pauseStartTime) {
-      pausedSeconds += Math.floor((Date.now() - pauseStartTime) / 1000);
-    }
+    if (pauseStartTime) pausedSeconds += Math.floor((Date.now() - pauseStartTime) / 1000);
     document.getElementById("pauseTime").style.display = "none";
     isPaused = false;
     timer.className = "timer running";
     timerInterval = setInterval(tick, 100);
   }
-
   updateUIState();
 }
 
 function stopTimer() {
   if (!isRunning && !isPaused) return;
-
   if (timerInterval) clearInterval(timerInterval);
-  isRunning = false;
-  isPaused = false;
+  isRunning = false; isPaused = false;
   timer.className = "timer";
-  timer.innerText = "00:00";
-  timer.style.transform = "scale(1)";
-  currentStep.innerText = "Ready";
-  currentStep.className = "current";
+  timer.innerText = "00:00"; timer.style.transform = "scale(1)";
+  currentStep.innerText = "Ready"; currentStep.className = "current";
   document.getElementById("stepCounter").innerText = "-";
   document.getElementById("upcomingSteps").innerHTML = "";
   document.getElementById("pauseTime").style.display = "none";
-  pausedSeconds = 0;
-  bar.style.width = "0%";
-
-  if (wakelock) {
-    wakelock.release().catch(e => console.warn("WakeLock release failed", e));
-    wakelock = null;
-  }
-
+  pausedSeconds = 0; bar.style.width = "0%";
+  if (wakelock) { wakelock.release().catch(e => console.warn("WakeLock release failed", e)); wakelock = null; }
   updateUIState();
 }
 
@@ -690,19 +608,9 @@ function endTimer() {
   document.getElementById("stepCounter").innerText = "Done";
   document.getElementById("upcomingSteps").innerHTML = "";
   addToHistory(currentProcessName || "Quick Process");
-  playSound();
-  vibrate();
-
-  if (wakelock) {
-    wakelock.release().catch(e => console.warn("WakeLock release failed", e));
-    wakelock = null;
-  }
-
-  setTimeout(() => {
-    startBtn.disabled = false;
-    pauseBtn.disabled = true;
-  }, 1000);
-
+  playSound(); vibrate();
+  if (wakelock) { wakelock.release().catch(e => console.warn("WakeLock release failed", e)); wakelock = null; }
+  setTimeout(() => { startBtn.disabled = false; pauseBtn.disabled = true; }, 1000);
   updateUIState();
 }
 
@@ -713,10 +621,8 @@ function updatePauseTime() {
   }
 }
 
-// ===== Audio & Haptics =====
-function vibrate() {
-  if (navigator.vibrate) navigator.vibrate([50,30,50]);
-}
+// ===== Audio =====
+function vibrate() { if (navigator.vibrate) navigator.vibrate([50,30,50]); }
 
 function playSound() {
   if (!audioEnabled) return;
@@ -726,15 +632,12 @@ function playSound() {
     const gain = audioContext.createGain();
     osc.connect(gain);
     gain.connect(audioContext.destination);
-    osc.frequency.value = 880;
-    osc.type = "sine";
+    osc.frequency.value = 880; osc.type = "sine";
     gain.gain.setValueAtTime(0.3, audioContext.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
     osc.start(audioContext.currentTime);
     osc.stop(audioContext.currentTime + 0.3);
-  } catch (e) {
-    console.log("Audio failed:", e);
-  }
+  } catch (e) { console.log("Audio failed:", e); }
 }
 
 function toggleAudio() {
@@ -744,27 +647,22 @@ function toggleAudio() {
   if (audioEnabled) playSound();
 }
 
-// ===== Process Management =====
+// ===== Process management =====
 function updateProcessNames(selected = null) {
   const type = processType.value;
   const list = processOptions[type] || [];
   processName.innerHTML = "";
-
   list.forEach(name => {
     const o = document.createElement("option");
     o.value = o.textContent = name;
     processName.appendChild(o);
   });
-
   if (selected) processName.value = selected;
 }
 
 function saveProcess() {
   let name = currentProcessName;
-  if (!name) {
-    name = prompt("Name this process");
-    if (!name) return;
-  }
+  if (!name) { name = prompt("Name this process"); if (!name) return; }
 
   processes[name] = {
     processType: processType.value,
@@ -797,10 +695,8 @@ function refreshProcessList() {
 function loadProcess() {
   const name = savedProcesses.value;
   if (!name) return;
-
   currentProcessName = name;
   const p = processes[name];
-
   processType.value = p.processType;
   updateProcessNames(p.processName);
   filmName.value = p.filmName || "";
@@ -815,10 +711,7 @@ function loadProcess() {
 
 function deleteProcess() {
   const name = savedProcesses.value;
-  if (!name) {
-    alert("Select a process to delete");
-    return;
-  }
+  if (!name) { alert("Select a process to delete"); return; }
   if (!confirm(`Delete "${name}"?`)) return;
   delete processes[name];
   localStorage.setItem("darkroomProcesses", JSON.stringify(processes));
@@ -837,11 +730,7 @@ function exportProcess() {
   a.download = `darkroom-processes-${new Date().toISOString().split('T')[0]}.json`;
   a.click();
 }
-
-function importProcess() {
-  fileInput.click();
-}
-
+function importProcess() { fileInput.click(); }
 fileInput.onchange = e => {
   const file = e.target.files[0];
   const r = new FileReader();
@@ -859,17 +748,11 @@ fileInput.onchange = e => {
   r.readAsText(file);
 };
 
-// Export CSV - only "All Saved Processes" as requested.
-// Each saved process becomes one CSV row. Steps are grouped into a single "Steps" column
-// with entries like: "1. Developer (08:00) - tip | 2. Stop (00:30)"
+// Export CSV (All saved processes, Steps grouped into single column)
 function exportCSV() {
   const processEntries = Object.entries(processes);
-  if (!processEntries.length) {
-    alert("No saved processes to export.");
-    return;
-  }
+  if (!processEntries.length) { alert("No saved processes to export."); return; }
 
-  // Cleaner, human-friendly headers
   const header = [
     "Process Name",
     "Process Type",
@@ -881,14 +764,11 @@ function exportCSV() {
     "Notes",
     "Steps"
   ];
-
   const rows = [header];
 
   processEntries.forEach(([name, p]) => {
     const stepsArr = p.steps || [];
     const totalSec = stepsArr.reduce((s, st) => s + ((st.min || 0) * 60 + (st.sec || 0)), 0);
-
-    // Build single Steps string: numbered entries separated by " | "
     const stepsText = stepsArr.map((st, idx) => {
       const dur = formatTime((st.min || 0) * 60 + (st.sec || 0));
       const tipPart = st.tip ? ` - ${st.tip}` : "";
@@ -906,14 +786,10 @@ function exportCSV() {
       (p.notes || "").replace(/\r?\n/g, " | "),
       stepsText
     ];
-
     rows.push(row);
   });
 
-  // Convert to CSV with proper quoting
   const csvContent = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
-
-  // Prepend UTF-8 BOM to improve Excel compatibility
   const bom = "\uFEFF";
   const blob = new Blob([bom + csvContent], { type: "text/csv;charset=utf-8;" });
   const a = document.createElement("a");
@@ -922,13 +798,10 @@ function exportCSV() {
   a.click();
 }
 
+// Export PDF (append element off-screen so html2pdf can measure)
 function exportPDF() {
-  if (steps.length === 0) {
-    alert("Add steps first");
-    return;
-  }
-
-  const totalSec = steps.reduce((sum, s) => sum + ( (s.min || 0) * 60 + (s.sec || 0) ), 0);
+  if (steps.length === 0) { alert("Add steps first"); return; }
+  const totalSec = steps.reduce((sum, s) => sum + ((s.min||0)*60 + (s.sec||0)), 0);
   const date = new Date().toLocaleDateString();
 
   const element = document.createElement("div");
@@ -936,86 +809,80 @@ function exportPDF() {
   element.style.fontFamily = "Arial, sans-serif";
   element.style.backgroundColor = "#fff";
   element.style.color = "#000";
-  // width for A4 rendering - helps html2pdf measure layout reliably
   element.style.width = "210mm";
   element.style.position = "absolute";
   element.style.left = "-9999px";
   element.style.top = "0";
 
   element.innerHTML = `
-    <h1 style="text-align: center; color: #333; border-bottom: 2px solid #333; padding-bottom: 10px;">
+    <h1 style="text-align:center;color:#333;border-bottom:2px solid #333;padding-bottom:10px;">
       Darkroom Process Timer Report
     </h1>
-    
-    <div style="margin-top: 20px; padding: 15px; background: #f5f5f5; border-left: 4px solid #333;">
-      <h2 style="margin-top: 0; color: #333;">Process Details</h2>
-      <table style="width: 100%; border-collapse: collapse;">
-        <tr style="background: #e8e8e8;">
-          <td style="padding: 8px; font-weight: bold;">Process Name:</td>
-          <td style="padding: 8px;">${processName.value || "N/A"}</td>
+    <div style="margin-top:20px;padding:15px;background:#f5f5f5;border-left:4px solid #333;">
+      <h2 style="margin-top:0;color:#333;">Process Details</h2>
+      <table style="width:100%;border-collapse:collapse;">
+        <tr style="background:#e8e8e8;">
+          <td style="padding:8px;font-weight:bold;">Process Name:</td>
+          <td style="padding:8px;">${processName.value || "N/A"}</td>
         </tr>
         <tr>
-          <td style="padding: 8px; font-weight: bold;">Type:</td>
-          <td style="padding: 8px;">${processType.value || "N/A"}</td>
+          <td style="padding:8px;font-weight:bold;">Type:</td>
+          <td style="padding:8px;">${processType.value || "N/A"}</td>
         </tr>
-        <tr style="background: #f0f0f0;">
-          <td style="padding: 8px; font-weight: bold;">Film/Paper:</td>
-          <td style="padding: 8px;">${filmName.value || "N/A"}</td>
-        </tr>
-        <tr>
-          <td style="padding: 8px; font-weight: bold;">Developer:</td>
-          <td style="padding: 8px;">${developerName.value || "N/A"}</td>
-        </tr>
-        <tr style="background: #f0f0f0;">
-          <td style="padding: 8px; font-weight: bold;">Temperature:</td>
-          <td style="padding: 8px;">${temperature.value || "N/A"}°C</td>
+        <tr style="background:#f0f0f0;">
+          <td style="padding:8px;font-weight:bold;">Film/Paper:</td>
+          <td style="padding:8px;">${filmName.value || "N/A"}</td>
         </tr>
         <tr>
-          <td style="padding: 8px; font-weight: bold;">Push/Pull:</td>
-          <td style="padding: 8px;">${pushPull.value || "N/A"}</td>
+          <td style="padding:8px;font-weight:bold;">Developer:</td>
+          <td style="padding:8px;">${developerName.value || "N/A"}</td>
         </tr>
-        <tr style="background: #f0f0f0;">
-          <td style="padding: 8px; font-weight: bold;">Total Duration:</td>
-          <td style="padding: 8px; font-weight: bold; color: #333;">${formatTime(totalSec)}</td>
+        <tr style="background:#f0f0f0;">
+          <td style="padding:8px;font-weight:bold;">Temperature:</td>
+          <td style="padding:8px;">${temperature.value || "N/A"}°C</td>
         </tr>
-        ${notes.value ? `<tr>
-          <td style="padding: 8px; font-weight: bold;">Notes:</td>
-          <td style="padding: 8px;">${notes.value.replace(/\n/g, "<br>")}</td>
-        </tr>` : ""}
+        <tr>
+          <td style="padding:8px;font-weight:bold;">Push/Pull:</td>
+          <td style="padding:8px;">${pushPull.value || "N/A"}</td>
+        </tr>
+        <tr style="background:#f0f0f0;">
+          <td style="padding:8px;font-weight:bold;">Total Duration:</td>
+          <td style="padding:8px;font-weight:bold;color:#333;">${formatTime(totalSec)}</td>
+        </tr>
+        ${notes.value ? `<tr><td style="padding:8px;font-weight:bold;">Notes:</td><td style="padding:8px;">${notes.value.replace(/\n/g,"<br>")}</td></tr>` : ""}
       </table>
     </div>
 
-    <div style="margin-top: 20px; padding: 15px; background: #f5f5f5;">
-      <h2 style="margin-top: 0; color: #333;">Process Steps</h2>
-      <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+    <div style="margin-top:20px;padding:15px;background:#f5f5f5;">
+      <h2 style="margin-top:0;color:#333;">Process Steps</h2>
+      <table style="width:100%;border-collapse:collapse;margin-top:10px;">
         <thead>
-          <tr style="background: #333; color: white;">
-            <th style="padding: 10px; text-align: left; border: 1px solid #999;">#</th>
-            <th style="padding: 10px; text-align: left; border: 1px solid #999;">Step Name</th>
-            <th style="padding: 10px; text-align: center; border: 1px solid #999;">Duration</th>
-            <th style="padding: 10px; text-align: left; border: 1px solid #999;">Tip/Notes</th>
+          <tr style="background:#333;color:white;">
+            <th style="padding:10px;text-align:left;border:1px solid #999;">#</th>
+            <th style="padding:10px;text-align:left;border:1px solid #999;">Step Name</th>
+            <th style="padding:10px;text-align:center;border:1px solid #999;">Duration</th>
+            <th style="padding:10px;text-align:left;border:1px solid #999;">Tip/Notes</th>
           </tr>
         </thead>
         <tbody>
-          ${steps.map((s, i) => `
-            <tr style="background: ${i % 2 === 0 ? '#ffffff' : '#f9f9f9'};">
-              <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">${i + 1}</td>
-              <td style="padding: 10px; border: 1px solid #ddd;">${s.name}</td>
-              <td style="padding: 10px; border: 1px solid #ddd; text-align: center; font-weight: bold;">${formatTime((s.min||0) * 60 + (s.sec||0))}</td>
-              <td style="padding: 10px; border: 1px solid #ddd;">${s.tip || "-"}</td>
+          ${steps.map((s,i) => `
+            <tr style="background:${i%2===0 ? '#ffffff' : '#f9f9f9'};">
+              <td style="padding:10px;border:1px solid #ddd;font-weight:bold;">${i+1}</td>
+              <td style="padding:10px;border:1px solid #ddd;">${s.name}</td>
+              <td style="padding:10px;border:1px solid #ddd;text-align:center;font-weight:bold;">${formatTime((s.min||0)*60 + (s.sec||0))}</td>
+              <td style="padding:10px;border:1px solid #ddd;">${s.tip || "-"}</td>
             </tr>
           `).join("")}
         </tbody>
       </table>
     </div>
 
-    <div style="margin-top: 20px; padding: 15px; background: #f0f0f0; border-left: 4px solid #666;">
-      <p style="margin: 0;"><strong>Generated:</strong> ${date}</p>
-      <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">Darkroom Process Timer</p>
+    <div style="margin-top:20px;padding:15px;background:#f0f0f0;border-left:4px solid #666;">
+      <p style="margin:0;"><strong>Generated:</strong> ${date}</p>
+      <p style="margin:5px 0 0 0;font-size:12px;color:#666;">Darkroom Process Timer</p>
     </div>
   `;
 
-  // Append to DOM off-screen so html2pdf can compute size/styles reliably
   document.body.appendChild(element);
 
   const opt = {
@@ -1026,72 +893,28 @@ function exportPDF() {
     jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
   };
 
-  // html2pdf returns a Promise — remove element after save (or on error)
   try {
-    html2pdf().set(opt).from(element).save().then(() => {
-      element.remove();
-    }).catch((err) => {
-      console.error("html2pdf error:", err);
-      element.remove();
-      alert("PDF export failed (see console).");
-    });
-  } catch (e) {
-    console.error("PDF generation failed:", e);
-    element.remove();
-    alert("PDF export failed (see console).");
-  }
+    html2pdf().set(opt).from(element).save().then(() => element.remove()).catch(err => { console.error("html2pdf error:", err); element.remove(); alert("PDF export failed (see console)."); });
+  } catch (e) { console.error("PDF generation failed:", e); element.remove(); alert("PDF export failed (see console)."); }
 }
 
+// Print card
 function printCard() {
-  if (steps.length === 0) {
-    alert("Add steps first");
-    return;
-  }
-
-  let content = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>Darkroom Card</title>
-      <style>
-        body { font-family: monospace; margin: 20px; line-height: 1.8; }
-        h1 { margin: 10px 0; border-bottom: 2px solid #000; padding-bottom: 10px; }
-        .info { margin: 10px 0; border: 1px solid #000; padding: 10px; }
-        .step { margin: 8px 0; padding: 8px; border-left: 4px solid #000; padding-left: 10px; }
-        .tip { font-size: 0.9em; color: #666; margin-top: 4px; }
-      </style>
-    </head>
-    <body>
-      <h1>${processName.value || "Process"}</h1>
-      <div class="info">
-        <strong>Process:</strong> ${processName.value}<br>
-        <strong>Film/Paper:</strong> ${filmName.value || "-"}<br>
-        <strong>Developer:</strong> ${developerName.value || "-"}<br>
-        <strong>Temperature:</strong> ${temperature.value || "-"}°C<br>
-        <strong>Push/Pull:</strong> ${pushPull.value}
-      </div>
-      <h3>Steps:</h3>
-  `;
-
-  steps.forEach((s, i) => {
-    const stepTime = formatTime((s.min || 0) * 60 + (s.sec || 0));
-    content += `
-      <div class="step">
-        <strong>${i + 1}. ${s.name}</strong> - ${stepTime}
-        ${s.tip ? `<div class="tip">${s.tip}</div>` : ""}
-      </div>
-    `;
+  if (steps.length === 0) { alert("Add steps first"); return; }
+  let content = `<!DOCTYPE html><html><head><title>Darkroom Card</title><style>body{font-family:monospace;margin:20px;line-height:1.8}h1{margin:10px 0;border-bottom:2px solid #000;padding-bottom:10px}.info{margin:10px 0;border:1px solid #000;padding:10px}.step{margin:8px 0;padding:8px;border-left:4px solid #000;padding-left:10px}.tip{font-size:0.9em;color:#666;margin-top:4px}</style></head><body>`;
+  content += `<h1>${processName.value || "Process"}</h1><div class="info"><strong>Process:</strong> ${processName.value}<br><strong>Film/Paper:</strong> ${filmName.value || "-"}<br><strong>Developer:</strong> ${developerName.value || "-"}<br><strong>Temperature:</strong> ${temperature.value || "-"}°C<br><strong>Push/Pull:</strong> ${pushPull.value}</div><h3>Steps:</h3>`;
+  steps.forEach((s,i) => {
+    const stepTime = formatTime((s.min||0)*60 + (s.sec||0));
+    content += `<div class="step"><strong>${i+1}. ${s.name}</strong> - ${stepTime}${s.tip ? `<div class="tip">${s.tip}</div>` : ""}</div>`;
   });
-
   content += `</body></html>`;
-
   const win = window.open();
   win.document.write(content);
   win.document.close();
   setTimeout(() => win.print(), 250);
 }
 
-// ===== History =====
+// ===== History storage (UI removed) =====
 function addToHistory(processName) {
   const now = new Date();
   const dateStr = now.toLocaleDateString();
@@ -1099,48 +922,22 @@ function addToHistory(processName) {
   history.unshift(`${dateStr} ${timeStr} - ${processName}`);
   if (history.length > 200) history.pop();
   localStorage.setItem("darkroomHistory", JSON.stringify(history));
-  updateHistory();
 }
 
-function updateHistory() {
-  const panel = document.getElementById("historyPanel");
-  if (history.length === 0) {
-    panel.innerHTML = "<div style='color:#666;text-align:center;padding:12px;'>No history yet</div>";
-    return;
-  }
-  panel.innerHTML = "";
-  history.slice(0, 100).forEach(entry => {
-    const item = document.createElement("div");
-    item.className = "history-item";
-    item.textContent = entry;
-    panel.appendChild(item);
-  });
-}
-
-// ===== Event Listeners =====
+// ===== Keyboard & wake lock =====
 document.addEventListener("keydown", (e) => {
-  if (e.code === "Space") {
-    e.preventDefault();
-    if (!isRunning) start();
-    else pause();
-  }
+  if (e.code === "Space") { e.preventDefault(); if (!isRunning) start(); else pause(); }
   if (e.code === "Escape") stopTimer();
 });
 
 document.addEventListener("visibilitychange", async () => {
-  if (document.hidden && wakelock) {
-    try { await wakelock.release(); } catch (e) { console.warn("WakeLock release failed", e); }
-    wakelock = null;
-  } else if (!document.hidden && isRunning) {
-    try { if ("wakeLock" in navigator && !wakelock) wakelock = await navigator.wakeLock.request("screen"); } catch (err) { console.log("Wake lock re-request failed:", err); wakelock = null; }
-  }
+  if (document.hidden && wakelock) { try { await wakelock.release(); } catch (e) { console.warn("WakeLock release failed", e); } wakelock = null; }
+  else if (!document.hidden && isRunning) { try { if ("wakeLock" in navigator && !wakelock) wakelock = await navigator.wakeLock.request("screen"); } catch (err) { console.log("Wake lock re-request failed:", err); wakelock = null; } }
 });
 
-document.addEventListener("touchmove", (e) => {
-  if (isRunning) e.preventDefault();
-}, { passive: false });
+document.addEventListener("touchmove", (e) => { if (isRunning) e.preventDefault(); }, { passive: false });
 
-// Start application
+// Start
 init();
 </script>
 </body>
