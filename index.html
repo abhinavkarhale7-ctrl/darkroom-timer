@@ -9,8 +9,8 @@
 body {
   margin: 0;
   padding: 10px;
-  background: #000;
-  color: #0f0;
+  background: #0a0a0a;
+  color: #d0d0d0;
   font-family: system-ui, monospace;
 }
 .app {
@@ -30,28 +30,36 @@ input, select, textarea, button {
   padding: 6px;
   font-size: 14px;
   border-radius: 4px;
-  border: none;
+  border: 1px solid #444;
+  background: #1a1a1a;
+  color: #d0d0d0;
 }
   .current {
   text-align: center;
   font-size: 16px;
   padding: 6px;
-  border: 2px solid #0f0;
+  border: 2px solid #9d84b7;
   border-radius: 6px;
   margin-bottom: 6px;
 }
 textarea {
   resize: vertical;
+  color: #d0d0d0;
+  background: #1a1a1a;
 }
 button {
   min-height: 48px;
   font-size: 16px;
-  background: #0f0;
+  background: #9d84b7;
   color: #000;
 }
+button:hover {
+  background: #b8a0d0;
+}
 .secondary {
-  background: #333;
-  color: #0f0;
+  background: #444;
+  color: #9d84b7;
+  border: 1px solid #9d84b7;
 }
 .row {
   display: flex;
@@ -76,15 +84,15 @@ button {
 }
 
 .timer.running {
-  color: #0f0;
+  color: #9d84b7;
 }
 
 .timer.paused {
-  color: #ff0;
+  color: #d4a574;
 }
 
 .timer.done {
-  color: #f00;
+  color: #ff6b6b;
   transform: scale(1.1);
 }
 .current {
@@ -93,25 +101,26 @@ button {
 }
 hr {
   border: 0;
-  border-top: 1px solid #333;
+  border-top: 1px solid #444;
   margin: 8px 0;
 }
 .info-box {
-  background: #111;
-  border: 1px solid #0f0;
+  background: #1a1a1a;
+  border: 1px solid #9d84b7;
   padding: 8px;
   border-radius: 4px;
   margin-bottom: 6px;
   font-size: 12px;
   text-align: center;
+  color: #d0d0d0;
 }
 .step-counter {
   font-weight: bold;
-  color: #0f0;
+  color: #9d84b7;
 }
 .upcoming {
-  background: #111;
-  border-left: 3px solid #0f0;
+  background: #1a1a1a;
+  border-left: 3px solid #9d84b7;
   padding: 6px;
   margin-bottom: 6px;
   font-size: 11px;
@@ -120,25 +129,25 @@ hr {
 }
 .upcoming-item {
   padding: 4px 0;
-  color: #888;
+  color: #999;
 }
 .upcoming-item.next {
-  color: #0f0;
+  color: #9d84b7;
   font-weight: bold;
 }
-.color-dev { border-left: 4px solid #00f !important; }
-.color-stop { border-left: 4px solid #ff0 !important; }
-.color-fix { border-left: 4px solid #0f0 !important; }
-.color-wash { border-left: 4px solid #0ff !important; }
+.color-dev { border-left: 4px solid #6a7fdb !important; }
+.color-stop { border-left: 4px solid #d4a574 !important; }
+.color-fix { border-left: 4px solid #9d84b7 !important; }
+.color-wash { border-left: 4px solid #7fccdb !important; }
 .step-tip {
   font-size: 10px;
-  color: #666;
+  color: #999;
   font-style: italic;
   margin-top: 4px;
 }
 .history-panel {
-  background: #111;
-  border: 1px solid #0f0;
+  background: #1a1a1a;
+  border: 1px solid #9d84b7;
   padding: 8px;
   border-radius: 4px;
   margin-bottom: 6px;
@@ -148,8 +157,8 @@ hr {
 }
 .history-item {
   padding: 4px;
-  border-bottom: 1px solid #333;
-  color: #888;
+  border-bottom: 1px solid #444;
+  color: #999;
 }
 .history-item:last-child {
   border-bottom: none;
@@ -174,11 +183,15 @@ hr {
 .template-btn {
   padding: 6px;
   font-size: 12px;
-  background: #1a1a1a;
-  color: #0f0;
-  border: 1px solid #0f0;
+  background: #2a2a2a;
+  color: #9d84b7;
+  border: 1px solid #9d84b7;
   margin: 2px;
   cursor: pointer;
+}
+.template-btn:hover {
+  background: #9d84b7;
+  color: #000;
 }
 </style>
 </head>
@@ -234,8 +247,8 @@ hr {
   <span class="step-counter" id="stepCounter"></span>
 </div>
 <div class="timer" id="timer">00:00</div>
-<div id="progress" style="height:6px;background:#333;border-radius:3px;overflow:hidden;">
-  <div id="bar" style="height:100%;width:0%;background:#0f0;"></div>
+<div id="progress" style="height:14px;background:#333;border-radius:4px;overflow:hidden;border:1px solid #555;">
+  <div id="bar" style="height:100%;width:0%;background:#9d84b7;"></div>
 </div>
 
 <div class="row">
@@ -252,7 +265,7 @@ hr {
 
 <div style="margin-bottom: 6px;">
   <button class="secondary" style="margin-bottom: 3px; font-size: 11px;" onclick="toggleTemplates()">⭐ Quick Templates</button>
-  <div id="templatesBox" style="display:none;background:#111;border:1px solid #0f0;padding:6px;border-radius:4px;margin-bottom:6px;">
+  <div id="templatesBox" style="display:none;background:#1a1a1a;border:1px solid #9d84b7;padding:6px;border-radius:4px;margin-bottom:6px;">
     <button class="template-btn" onclick="loadTemplate('C-41 Film')">C-41 Film</button>
     <button class="template-btn" onclick="loadTemplate('E-6 Film')">E-6 Film</button>
     <button class="template-btn" onclick="loadTemplate('B&W Film')">B&W Film</button>
