@@ -25,13 +25,12 @@
     --text: #d0d0d0;
     --input-bg: #121212;
     --radius: 10px;
-    --gap: 10px;                /* changed per request */
+    --gap: 10px;
     --touch: 44px;
     --ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    --max-width: 960px;        /* allow scaling up to 960px */
+    --max-width: 960px;
   }
 
-  /* Light theme overrides */
   body.theme-light{
     --bg: #f6f7fb;
     --panel: #ffffff;
@@ -43,84 +42,80 @@
     --input-bg: #fbfbfd;
   }
 
-  /* Base & responsive scaling */
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html,body { height:100%; margin:0; font-family:var(--ui); background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
   body { display:flex; justify-content:center; padding:10px; }
 
-  /* App container: mobile-first; center and allow up to 960px */
+  /* App container */
   .app {
     width: clamp(320px, 92vw, 420px);
-    max-width: 960px;          /* changed per request */
+    max-width: var(--max-width);
     margin: 0 auto;
     background: transparent;
   }
 
-  /* Slight scaling for very wide screens */
   @media (min-width:1200px){
     .app { transform: scale(1.02); transform-origin: top center; }
   }
 
-  /* Panels & typography */
   .panel { background:var(--panel); border-radius:var(--radius); padding:12px; border:1px solid var(--border); box-shadow: 0 8px 20px rgba(0,0,0,0.16); }
   h1 { text-align:center; margin:6px 0 10px 0; font-size:18px; }
   label {
     display:block;
-    font-size:11px;           /* changed to 11px */
-    color:var(--muted);       /* color var(--muted) */
-    text-transform:uppercase; /* transform to uppercase */
-    letter-spacing:0.4px;     /* letter spacing */
+    font-size:11px;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:0.4px;
     margin-bottom:6px;
   }
 
-  /* Inputs & buttons: unified sizing */
   input, select, textarea, button {
-    font-size:14px;           /* all inputs/buttons font-size 14px */
-    padding:9px 10px;         /* padding changed to 9px 10px */
+    font-size:14px;
+    padding:9px 10px;
     color:var(--text);
     background:var(--input-bg);
     border:1px solid var(--border);
     border-radius:8px;
     outline:none;
   }
-  textarea { min-height:72px; resize:vertical; }
+  textarea { min-height:120px; resize:vertical; width:100%; }
   input::placeholder, textarea::placeholder { color:#8c8c8c; }
 
-  /* Compact steps row (visually calmer) */
+  /* Steps row: visually calmer, tip column constrained */
   #steps { display:flex; flex-direction:column; gap:6px; margin-top:6px; }
   .step {
     display:grid;
     gap:6px;
-    grid-template-columns: 1fr 60px 52px 1fr 28px; /* name / min / sec / tip / remove */
+    /* limit tip column (min 80px, max 120px) so it doesn't push out other elements */
+    grid-template-columns: 1fr 60px 52px minmax(80px,120px) 28px;
     align-items:center;
-    padding:6px 4px;                        /* slightly increased padding for readability */
-    background: transparent;                /* calmer: no strong contrast */
+    padding:6px 4px;
+    background: transparent;
     border-radius:8px;
   }
 
-  .step input { padding:6px 8px; font-size:13px; line-height:1.1; background:var(--input-bg); border:1px solid rgba(255,255,255,0.03); }
-  .step .min, .step .sec { width:100%; box-sizing:border-box; text-align:center; }
-  .step .tip { font-size:13px; color:var(--muted); }
+  .step input { padding:6px 8px; font-size:13px; line-height:1.1; background:var(--input-bg); border:1px solid rgba(255,255,255,0.03); width:100%; box-sizing:border-box; }
+  .step .min, .step .sec { text-align:center; }
+  .step .tip { font-size:13px; color:var(--muted); max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .step .remove { width:24px; height:24px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; padding:0; opacity:0.7; transition:opacity .12s ease; background:transparent; border:1px solid rgba(255,255,255,0.03); color:var(--text); }
   .step .remove:hover { opacity:1; }
 
-  /* On very narrow phones stack more compactly */
   @media (max-width:360px){
     .step { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; }
     .step .name { grid-column: 1 / -1; }
     .step .min { grid-column: 1 / 2; }
     .step .sec { grid-column: 2 / 3; }
-    .step .tip { grid-column: 1 / -1; }
+    .step .tip { grid-column: 1 / -1; max-width:100%; white-space:normal; }
     .step .remove { grid-column: 2 / 3; justify-self:end; }
   }
 
-  /* Row helpers */
   .row { display:flex; gap:8px; align-items:flex-start; flex-wrap:wrap; }
   .col { flex:1 1 auto; min-width:0; }
-  .col-fixed { flex:0 0 auto; width:92px; max-width:40%; }
+  .col-fixed { flex:0 0 auto; width:92px; max-width:30%; }
+  /* ensure fixed column inputs don't overflow reading area */
+  .col-fixed input, .col-fixed select { width:100%; box-sizing:border-box; }
 
-  /* Timer & progress */
-  .timer { text-align:center; font-weight:700; font-variant-numeric:tabular-nums; font-size:38px; margin:8px 0; letter-spacing:-0.5px; } /* letter-spacing changed to -0.5px */
+  .timer { text-align:center; font-weight:700; font-variant-numeric:tabular-nums; font-size:38px; margin:8px 0; letter-spacing:-0.5px; }
   @media (min-width:420px) { .timer { font-size:44px; } }
   .timer.running { color:var(--success); }
   .timer.paused { color:var(--warning); }
@@ -132,18 +127,16 @@
   .current { text-align:center; padding:6px; border-radius:8px; border:1px solid rgba(157,132,183,0.06); margin-bottom:8px; font-size:13px; }
   .muted { color:var(--muted); font-size:13px; }
 
-  /* Controls: identical touch targets, compact */
   .controls-row { display:flex; gap:8px; margin-top:10px; }
   .control-btn { flex:1 1 0; min-height:40px; border-radius:10px; font-weight:700; background:var(--accent); color:#000; display:inline-flex; align-items:center; justify-content:center; padding:8px 10px; font-size:14px; }
   .control-btn.secondary { background:transparent; border:1px solid var(--border); color:var(--text); }
 
-  /* Action buttons */
   .action-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+  /* make the Save Process button span full reading area */
+  .action-row .save-full { grid-column: 1 / -1; }
 
-  /* Theme toggle small top-right */
   .theme-toggle { position:fixed; right:10px; top:10px; width:36px; height:36px; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--text); display:inline-flex; align-items:center; justify-content:center; font-size:16px; z-index:1000; }
 
-  /* Additional responsive tweak block requested by user */
   @media (max-width: 480px) {
     .controls-row {
       gap: 8px;
@@ -233,7 +226,7 @@
       </div>
 
       <div class="action-row" role="group" aria-label="File actions">
-        <button class="control-btn" style="background:var(--accent);color:#000" onclick="saveProcess()">Save Process</button>
+        <button class="control-btn save-full" onclick="saveProcess()">Save Process</button>
         <button class="control-btn secondary" onclick="importProcess()">Import JSON</button>
         <button class="control-btn secondary" onclick="exportProcess()">Export JSON</button>
         <button class="control-btn secondary" onclick="printCard()">Print</button>
@@ -312,7 +305,67 @@
     themeToggle.textContent = isLight ? '☀️' : '🌙';
   }
 
-  // Initialization
+  // Play a short click/beep immediately (used for toggle feedback even when audioEnabled is false)
+  function playClick() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = 880; // beep pitch
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + 0.005);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.18);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.18);
+      // ensure context is closed after sound finishes to avoid persistent audio context in some browsers
+      setTimeout(() => {
+        try { ctx.close && ctx.close(); } catch (e) {}
+      }, 300);
+    } catch (e) {
+      // silently fail on older browsers
+      console.warn('playClick failed', e);
+    }
+  }
+
+  // Play the regular alarm sound — respects audioEnabled unless force parameter passed
+  function playSound(force = false) {
+    if (!force && !audioEnabled) return;
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      osc.connect(gain);
+      gain.connect(audioContext.destination);
+      osc.frequency.value = 880;
+      osc.type = "sine";
+      gain.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+      osc.start(audioContext.currentTime);
+      osc.stop(audioContext.currentTime + 0.3);
+      setTimeout(() => { try { audioContext.close && audioContext.close(); } catch (e) {} }, 400);
+    } catch (e) {
+      console.log("Audio failed:", e);
+    }
+  }
+
+  function toggleAudio() {
+    // always play a click sound to confirm the toggle (even if audioEnabled will be false after toggle)
+    playClick();
+
+    // flip the stored preference
+    audioEnabled = !audioEnabled;
+    localStorage.setItem("darkroomAudio", audioEnabled ? "true" : "false");
+    document.getElementById("audioToggle").style.opacity = audioEnabled ? "1" : "0.5";
+
+    // Also play a short confirmation tone using the main playSound but force it so the user hears the state change
+    // (this ensures audible feedback even if previously audioEnabled was false)
+    playSound(true);
+  }
+
+  // Initialization & remaining functions (unchanged behavior)
   function init(){
     applySavedTheme();
     addStep("Developer",8,0,"Agitate every 30 sec");
@@ -328,7 +381,6 @@
     document.getElementById("audioToggle").style.opacity = audioEnabled ? "1" : "0.5";
   }
 
-  // Helpers
   function formatTime(seconds){
     const total = Math.max(0, Math.floor(seconds));
     const m = Math.floor(total/60);
@@ -343,7 +395,6 @@
     stopBtn.disabled = !isRunning && !isPaused;
   }
 
-  // Steps UI
   function addStep(name="",min=0,sec=0,tip=""){
     steps.push({name,min,sec,tip});
     renderSteps();
@@ -419,7 +470,6 @@
 
   function updateUpcomingSteps(){ /* minimal on mobile */ }
 
-  // Timer control
   async function start(){
     if(!steps.length){ alert("Add at least one step first"); return; }
     isRunning = true; isPaused = false; timerIndex = 0; pausedSeconds = 0;
@@ -454,7 +504,9 @@
     if(remainingSeconds <= 0){
       remainingSeconds = 0;
       clearInterval(timerInterval);
-      playSound(); vibrate();
+      // use playSound() (respects audioEnabled) for step completion
+      playSound();
+      vibrate();
       timerIndex++;
       setTimeout(()=> nextStep(), 500);
     }
@@ -487,12 +539,9 @@
     addToHistory(currentProcessName || 'Quick Process');
   }
 
-  // Audio/haptics
   function vibrate(){ if(navigator.vibrate) navigator.vibrate([50,30,50]); }
-  function playSound(){ if(!audioEnabled) return; try{ const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination); osc.frequency.value=880; osc.type='sine'; gain.gain.setValueAtTime(0.3,ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+0.3); osc.start(ctx.currentTime); osc.stop(ctx.currentTime+0.3) }catch(e){} }
-  function toggleAudio(){ audioEnabled = !audioEnabled; localStorage.setItem('darkroomAudio', audioEnabled ? 'true' : 'false'); document.getElementById('audioToggle').style.opacity = audioEnabled ? '1' : '0.5'; }
 
-  // Persistence & UI
+  // Persistence & export (unchanged)
   function updateProcessNames(selected=null){
     const type = processType.value;
     const list = processOptions[type] || [];
@@ -557,24 +606,19 @@
     alert('Deleted');
   }
 
-  // Import/Export & CSV
   function exportProcess(){ const data = JSON.stringify(processes, null, 2); const blob = new Blob([data], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `darkroom-processes-${new Date().toISOString().split('T')[0]}.json`; a.click(); }
   function importProcess(){ fileInput.click(); }
   fileInput.onchange = e => { const f = e.target.files[0]; if(!f) return; const r = new FileReader(); r.onload = () => { try { const imported = JSON.parse(r.result); processes = {...processes, ...imported}; localStorage.setItem('darkroomProcesses', JSON.stringify(processes)); refreshProcessList(); alert('Imported'); } catch(err){ alert('Invalid JSON file'); } }; r.readAsText(f); };
 
   function exportCSV(){ const entries = Object.entries(processes); if(!entries.length){ alert('No saved processes to export.'); return; } const header = ['Saved Key','Process Name','Type','Film/Paper','Developer','Temperature (°C)','Push/Pull','Total Time','Notes','Steps']; const rows=[header]; entries.forEach(([key,p])=>{ const proc = p||{}; const stepsArr = proc.steps || []; const total = stepsArr.reduce((s,st)=>s + ((st.min||0)*60 + (st.sec||0)),0); const stepsText = stepsArr.map((st,idx)=>{ const dur = formatTime((st.min||0)*60 + (st.sec||0)); const tip = st.tip ? ` - ${st.tip}` : ''; return `${idx+1}. ${st.name || ''} (${dur})${tip}`; }).join(' | '); const row=[key,proc.processName||key,proc.processType||'',proc.filmName||'',proc.developerName||'',proc.temperature||'',proc.pushPull||'',formatTime(total),(proc.notes||'').replace(/\r?\n/g,' | '),stepsText]; rows.push(row); }); const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n'); const bom = '\uFEFF'; const blob = new Blob([bom + csv], {type:'text/csv;charset=utf-8;'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `darkroom-saved-processes-${new Date().toISOString().split('T')[0]}.csv`; a.click(); }
 
-  // Print
   function printCard(){ if(!steps.length){ alert('Add steps first'); return; } let html = '<!doctype html><html><head><meta charset="utf-8"><title>Darkroom Card</title><style>body{font-family:monospace;padding:20px}h1{font-size:18px}.step{margin:8px 0}</style></head><body>'; html += `<h1>${processName.value || currentProcessName || 'Process'}</h1>`; html += `<div><strong>Film/Paper:</strong> ${filmName.value || '-'}<br><strong>Developer:</strong> ${developerName.value || '-'}<br><strong>Temp:</strong> ${temperature.value || '-'}°C</div>`; html += '<h3>Steps</h3>'; steps.forEach((s,i)=>{ html += `<div class="step"><strong>${i+1}. ${s.name || ''}</strong> — ${formatTime((s.min||0)*60 + (s.sec||0))}${s.tip ? `<div>${s.tip}</div>` : ''}</div>`; }); html += '</body></html>'; const w = window.open(); w.document.write(html); w.document.close(); setTimeout(()=>w.print(),200); }
 
-  // History storage only
   function addToHistory(name){ const now = new Date(); history.unshift(`${now.toLocaleDateString()} ${now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} - ${name}`); if(history.length>200) history.length=200; localStorage.setItem('darkroomHistory', JSON.stringify(history)); }
 
-  // Keyboard & touch guard
   document.addEventListener('keydown', e => { if(e.code === 'Space'){ e.preventDefault(); if(!isRunning) start(); else pause(); } if(e.code === 'Escape') stopTimer(); });
   document.addEventListener('touchmove', e => { if(isRunning) e.preventDefault(); }, {passive:false});
 
-  // Start
   (function(){ applySavedTheme(); init(); })();
   function applySavedTheme(){ const t = localStorage.getItem('darkroomTheme') || 'dark'; document.body.classList.toggle('theme-light', t === 'light'); themeToggle.textContent = t === 'light' ? '☀️' : '🌙'; }
 </script>
