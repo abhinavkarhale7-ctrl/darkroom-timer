@@ -143,6 +143,7 @@ hr {
 </div>
 
 <script>
+  let currentProcessName + null;
 let steps = [];
 let timerIndex = 0;
 let remaining = 0;
@@ -273,9 +274,12 @@ function vibrate() {
 }
 
 function saveProcess() {
-  const name = prompt("Name this process");
-  if (!name) return;
-  processes[name] = {
+  let name = currentProcessName;
+
+  if (!name) {
+    name = prompt("Name this process");
+    if (!name) return;
+  }
     processType: processType.value,
     processName: processName.value,
     filmName: filmName.value,
@@ -286,6 +290,7 @@ function saveProcess() {
     steps
   };
   localStorage.setItem("darkroomProcesses", JSON.stringify(processes));
+  currentProcessNAme = name;
   refreshProcessList();
 }
 
@@ -300,6 +305,7 @@ function refreshProcessList() {
 }
 
 function loadProcess() {
+  currentProcessName = savedProcesses.value;
   const p = processes[savedProcesses.value];
   if (!p) return;
   processType.value = p.processType;
@@ -325,6 +331,7 @@ function loadProcess() {
   localStorage.setItem("darkroomProcesses", JSON.stringify(processes));
 
   savedProcesses.value = "";
+  currentProcessName = null;
   refreshProcessList();
 }
 
