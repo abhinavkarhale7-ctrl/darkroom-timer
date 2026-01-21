@@ -116,8 +116,8 @@
     grid-template-columns: 1fr 84px 64px 1fr 36px; /* name / min / sec / tip / remove */
     align-items:center;
   }
-  .step input { padding:9px 10px; }
-  .step .remove { width:28px; height:28px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; font-size:13px; }
+  .step input { padding:9px 10px; width:100%; }
+  .step .remove { width:28px; height:28px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; font-size:13px; padding:0; }
 
   /* Responsive step stacking for small screens */
   @media (max-width:720px){
@@ -128,6 +128,12 @@
     .step .tip { grid-column: 1 / -1; }
     .step .remove { grid-column: 2 / 3; justify-self:end; }
   }
+
+  /* Fix for temperature/input overflow: use constrained column containers */
+  .row { display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap; }
+  .col { flex:1 1 auto; min-width:0; }             /* allow child to shrink properly */
+  .col-fixed { flex:0 0 auto; width:120px; max-width:40%; } /* small fixed column but allows wrap on narrow screens */
+  .col-medium { flex:0 0 auto; width:150px; max-width:50%; }
 
   /* Timer, progress and info */
   .timer { text-align:center; font-weight:700; font-variant-numeric:tabular-nums; font-size:44px; margin:10px 0; letter-spacing:-1px; }
@@ -171,23 +177,23 @@
         <label style="margin-top:8px">Process name</label>
         <select id="processName"></select>
 
-        <div style="display:flex;gap:12px;margin-top:8px;">
-          <div style="flex:1 1 auto">
+        <div class="row" style="margin-top:8px;">
+          <div class="col">
             <label>Film / Paper</label>
             <input id="filmName" placeholder="e.g. Kodak Portra 400" />
           </div>
-          <div style="width:120px">
+          <div class="col-fixed">
             <label>Temp (°C)</label>
             <input id="temperature" type="number" placeholder="20" />
           </div>
         </div>
 
-        <div style="display:flex;gap:12px;margin-top:8px;">
-          <div style="flex:1">
+        <div class="row" style="margin-top:8px;">
+          <div class="col">
             <label>Developer</label>
             <input id="developerName" placeholder="e.g. D-76" />
           </div>
-          <div style="width:150px">
+          <div class="col-medium">
             <label>Push / Pull</label>
             <select id="pushPull">
               <option>Pull -2</option>
@@ -371,7 +377,7 @@
       name.placeholder = "Step name";
       name.value = s.name;
       name.disabled = isRunning;
-      name.oninput = e => { steps[i].name = e.target.value; updateUpcomingSteps(); };
+      name.oninput = e => { steps[i].name = e.target.value; };
 
       const min = document.createElement("input");
       min.className = "min";
@@ -418,9 +424,7 @@
     totalTimeEl.innerText = `Total: ${formatTime(total)}`;
   }
 
-  function updateUpcomingSteps(){
-    // kept lightweight — no intrusive rendering here
-  }
+  function updateUpcomingSteps(){ /* kept lightweight */ }
 
   // Timer control
   async function start(){
@@ -501,8 +505,6 @@
     updateUIState();
     addToHistory(currentProcessName || 'Quick Process');
   }
-
-  function updatePauseTime(){ /* placeholder */ }
 
   // Audio & haptics
   function vibrate(){ if(navigator.vibrate) navigator.vibrate([50,30,50]); }
