@@ -230,6 +230,8 @@
           <button class="control-btn secondary" onclick="importProcess()">Import JSON</button>
           <button class="control-btn secondary" onclick="exportProcess()">Export JSON</button>
           <button class="control-btn secondary" onclick="printCard()">Print</button>
+          <!-- New Reset button (resets entered inputs only) -->
+          <button class="control-btn secondary" onclick="resetInputs()">Reset Inputs</button>
         </div>
 
         <hr style="border:none;border-top:1px solid var(--border);margin:12px 0;">
@@ -284,23 +286,18 @@
     if (page === 'editor') {
       document.getElementById('editorPage').classList.add('active');
       document.getElementById('tabEditor').classList.add('active');
-      // stop timer UI niceties when editing
-      // leave timer running in background if it was running
     } else {
       document.getElementById('timerPage').classList.add('active');
       document.getElementById('tabTimer').classList.add('active');
-      // ensure timer display is current
       renderTimerUI();
     }
   }
 
   function renderTimerUI() {
-    // Update timer/current step/progress visuals so timer page shows latest state
     const step = steps[timerIndex] || null;
     document.getElementById('currentStep').innerText = step ? step.name : (isRunning ? 'Running' : 'Ready');
     document.getElementById('stepCounter').innerText = isRunning ? `${Math.min(steps.length, timerIndex + 1)}/${steps.length}` : '-';
     document.getElementById('timer').innerText = formatTime(Math.max(0, Math.ceil(remainingSeconds)));
-    // bar width is updated by tick() while running; if not running, set to 0 or appropriate
     if (!isRunning && timerIndex === 0) document.getElementById('bar').style.width = '0%';
   }
 
@@ -413,7 +410,7 @@
     playSound(true);
   }
 
-  // Initialization & core functions (unchanged)
+  // Initialization & core functions
   function init(){
     applySavedTheme();
     addStep("Developer",8,0,"Agitate every 30 sec");
@@ -664,6 +661,48 @@
   function printCard(){ if(!steps.length){ alert('Add steps first'); return; } let html = '<!doctype html><html><head><meta charset="utf-8"><title>Darkroom Card</title><style>body{font-family:monospace;padding:20px}h1{font-size:18px}.step{margin:8px 0}</style></head><body>'; html += `<h1>${processName.value || currentProcessName || 'Process'}</h1>`; html += `<div><strong>Film/Paper:</strong> ${filmName.value || '-'}<br><strong>Developer:</strong> ${developerName.value || '-'}<br><strong>Temp:</strong> ${temperature.value || '-'}°C</div>`; html += '<h3>Steps</h3>'; steps.forEach((s,i)=>{ html += `<div class="step"><strong>${i+1}. ${s.name || ''}</strong> — ${formatTime((s.min||0)*60 + (s.sec||0))}${s.tip ? `<div>${s.tip}</div>` : ''}</div>`; }); html += '</body></html>'; const w = window.open(); w.document.write(html); w.document.close(); setTimeout(()=>w.print(),200); }
 
   function addToHistory(name){ const now = new Date(); history.unshift(`${now.toLocaleDateString()} ${now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} - ${name}`); if(history.length>200) history.length=200; localStorage.setItem('darkroomHistory', JSON.stringify(history)); }
+
+  // NEW: resetInputs - clears entered input only (does NOT touch saved processes, theme, audio, history)
+  function resetInputs() {
+    if (!confirm("Reset all entered inputs? This will clear current form fields and steps but will NOT delete saved processes.")) return;
+
+    currentProcessName = null;
+
+    // reset selects/fields to defaults
+    processType.value = "Film";
+    updateProcessNames();
+    processName.selectedIndex = 0;
+
+    filmName.value = "";
+    developerName.value = "";
+    temperature.value = "";
+    pushPull.value = "Normal";
+    notes.value = "";
+
+    // reset steps to default starter steps
+    steps = [];
+    addStep("Developer", 8, 0, "Agitate every 30 sec");
+    addStep("Stop", 0, 30, "");
+    addStep("Fix", 5, 0, "");
+    addStep("Wash", 10, 0, "Multiple rinses");
+
+    renderSteps();
+    updateTotalTime();
+
+    // ensure timer UI reflects reset state
+    timerIndex = 0;
+    remainingSeconds = 0;
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+    // update timer page visuals if visible
+    renderTimerUI();
+
+    alert("Inputs have been reset.");
+  }
+
+  function updatePauseTime(){ /* placeholder kept for compatibility (no UI) */ }
 
   document.addEventListener('keydown', e => { if(e.code === 'Space'){ e.preventDefault(); if(!isRunning) start(); else pause(); } if(e.code === 'Escape') stopTimer(); });
   document.addEventListener('touchmove', e => { if(isRunning) e.preventDefault(); }, {passive:false});
