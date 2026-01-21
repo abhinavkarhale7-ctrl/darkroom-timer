@@ -25,9 +25,10 @@
     --text: #d0d0d0;
     --input-bg: #121212;
     --radius: 10px;
-    --gap: 8px;
+    --gap: 10px;                /* changed per request */
     --touch: 44px;
     --ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --max-width: 960px;        /* allow scaling up to 960px */
   }
 
   /* Light theme overrides */
@@ -47,51 +48,61 @@
   html,body { height:100%; margin:0; font-family:var(--ui); background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
   body { display:flex; justify-content:center; padding:10px; }
 
-  /* App container: mobile-first size; automatically centers on large screens and scales a bit for large viewports */
+  /* App container: mobile-first; center and allow up to 960px */
   .app {
-    width: clamp(320px, 92vw, 420px);    /* mobile width up to 420px */
-    max-width: 420px;
-    background: transparent;
+    width: clamp(320px, 92vw, 420px);
+    max-width: 960px;          /* changed per request */
     margin: 0 auto;
+    background: transparent;
   }
 
-  /* Slight subtle up-scale on very large screens so app doesn't look too small */
+  /* Slight scaling for very wide screens */
   @media (min-width:1200px){
-    .app { transform: scale(1.06); transform-origin: top center; }
+    .app { transform: scale(1.02); transform-origin: top center; }
   }
 
   /* Panels & typography */
-  .panel { background:var(--panel); border-radius:var(--radius); padding:12px; border:1px solid var(--border); box-shadow: 0 8px 20px rgba(0,0,0,0.25); }
+  .panel { background:var(--panel); border-radius:var(--radius); padding:12px; border:1px solid var(--border); box-shadow: 0 8px 20px rgba(0,0,0,0.16); }
   h1 { text-align:center; margin:6px 0 10px 0; font-size:18px; }
-  label { display:block; font-size:12px; color:var(--muted); margin-bottom:6px; }
+  label {
+    display:block;
+    font-size:11px;           /* changed to 11px */
+    color:var(--muted);       /* color var(--muted) */
+    text-transform:uppercase; /* transform to uppercase */
+    letter-spacing:0.4px;     /* letter spacing */
+    margin-bottom:6px;
+  }
 
+  /* Inputs & buttons: unified sizing */
   input, select, textarea, button {
-    font-size:13px;
+    font-size:14px;           /* all inputs/buttons font-size 14px */
+    padding:9px 10px;         /* padding changed to 9px 10px */
     color:var(--text);
     background:var(--input-bg);
     border:1px solid var(--border);
     border-radius:8px;
-    padding:8px 10px;
     outline:none;
   }
   textarea { min-height:72px; resize:vertical; }
   input::placeholder, textarea::placeholder { color:#8c8c8c; }
 
-  /* Compact steps row (reduced height but readable) */
+  /* Compact steps row (visually calmer) */
   #steps { display:flex; flex-direction:column; gap:6px; margin-top:6px; }
   .step {
     display:grid;
     gap:6px;
     grid-template-columns: 1fr 60px 52px 1fr 28px; /* name / min / sec / tip / remove */
     align-items:center;
-    padding:4px 2px;
+    padding:6px 4px;                        /* slightly increased padding for readability */
+    background: transparent;                /* calmer: no strong contrast */
+    border-radius:8px;
   }
 
-  /* smaller inputs in steps */
-  .step input { padding:6px 8px; font-size:12px; line-height:1.1; }
+  .step input { padding:6px 8px; font-size:13px; line-height:1.1; background:var(--input-bg); border:1px solid rgba(255,255,255,0.03); }
   .step .min, .step .sec { width:100%; box-sizing:border-box; text-align:center; }
-  .step .tip { font-size:12px; }
-  .step .remove { width:24px; height:24px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; padding:0; }
+  .step .tip { font-size:13px; color:var(--muted); }
+  .step .remove { width:24px; height:24px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; padding:0; opacity:0.7; transition:opacity .12s ease; background:transparent; border:1px solid rgba(255,255,255,0.03); color:var(--text); }
+  .step .remove:hover { opacity:1; }
 
   /* On very narrow phones stack more compactly */
   @media (max-width:360px){
@@ -109,7 +120,7 @@
   .col-fixed { flex:0 0 auto; width:92px; max-width:40%; }
 
   /* Timer & progress */
-  .timer { text-align:center; font-weight:700; font-variant-numeric:tabular-nums; font-size:38px; margin:8px 0; letter-spacing:-1px; }
+  .timer { text-align:center; font-weight:700; font-variant-numeric:tabular-nums; font-size:38px; margin:8px 0; letter-spacing:-0.5px; } /* letter-spacing changed to -0.5px */
   @media (min-width:420px) { .timer { font-size:44px; } }
   .timer.running { color:var(--success); }
   .timer.paused { color:var(--warning); }
@@ -123,15 +134,26 @@
 
   /* Controls: identical touch targets, compact */
   .controls-row { display:flex; gap:8px; margin-top:10px; }
-  .control-btn { flex:1 1 0; min-height:40px; border-radius:10px; font-weight:700; background:var(--accent); color:#000; display:inline-flex; align-items:center; justify-content:center; padding:8px 10px; font-size:13px; }
+  .control-btn { flex:1 1 0; min-height:40px; border-radius:10px; font-weight:700; background:var(--accent); color:#000; display:inline-flex; align-items:center; justify-content:center; padding:8px 10px; font-size:14px; }
   .control-btn.secondary { background:transparent; border:1px solid var(--border); color:var(--text); }
 
   /* Action buttons */
   .action-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
 
-  /* Theme toggle small top-right within mobile viewport */
+  /* Theme toggle small top-right */
   .theme-toggle { position:fixed; right:10px; top:10px; width:36px; height:36px; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--text); display:inline-flex; align-items:center; justify-content:center; font-size:16px; z-index:1000; }
 
+  /* Additional responsive tweak block requested by user */
+  @media (max-width: 480px) {
+    .controls-row {
+      gap: 8px;
+    }
+
+    .control-btn {
+      min-height: 48px;
+      font-size: 14px;
+    }
+  }
 </style>
 </head>
 <body>
@@ -470,7 +492,7 @@
   function playSound(){ if(!audioEnabled) return; try{ const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination); osc.frequency.value=880; osc.type='sine'; gain.gain.setValueAtTime(0.3,ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+0.3); osc.start(ctx.currentTime); osc.stop(ctx.currentTime+0.3) }catch(e){} }
   function toggleAudio(){ audioEnabled = !audioEnabled; localStorage.setItem('darkroomAudio', audioEnabled ? 'true' : 'false'); document.getElementById('audioToggle').style.opacity = audioEnabled ? '1' : '0.5'; }
 
-  // Persistence & UI (unchanged)
+  // Persistence & UI
   function updateProcessNames(selected=null){
     const type = processType.value;
     const list = processOptions[type] || [];
@@ -535,7 +557,7 @@
     alert('Deleted');
   }
 
-  // Import/Export & CSV (unchanged behavior)
+  // Import/Export & CSV
   function exportProcess(){ const data = JSON.stringify(processes, null, 2); const blob = new Blob([data], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `darkroom-processes-${new Date().toISOString().split('T')[0]}.json`; a.click(); }
   function importProcess(){ fileInput.click(); }
   fileInput.onchange = e => { const f = e.target.files[0]; if(!f) return; const r = new FileReader(); r.onload = () => { try { const imported = JSON.parse(r.result); processes = {...processes, ...imported}; localStorage.setItem('darkroomProcesses', JSON.stringify(processes)); refreshProcessList(); alert('Imported'); } catch(err){ alert('Invalid JSON file'); } }; r.readAsText(f); };
