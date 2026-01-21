@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Darkroom Timer">
 <meta name="theme-color" content="#0a0a0a">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
 * {
@@ -442,7 +443,8 @@ body.theme-minimal .template-btn {
 
 <div class="row">
   <button class="secondary" onclick="deleteProcess()">Delete</button>
-  <button class="secondary" onclick="exportCSV()">CSV</button>
+  <button class="secondary" onclick="exportCSV()">📊 CSV</button>
+  <button class="secondary" onclick="exportPDF()">📄 PDF</button>
   <button class="secondary" onclick="exportProcess()">JSON</button>
   <button class="secondary" onclick="importProcess()">Import</button>
   <button class="secondary" onclick="printCard()">Print</button>
@@ -1055,15 +1057,46 @@ fileInput.onchange = e => {
 
 function exportCSV() {
   const rows = [];
-  rows.push(["Process Name", "Type", "Film/Paper", "Developer", "Temp °C", "Push/Pull", "Notes", "Steps", "Total Time"]);
-
+  
+  // Current process info
+  rows.push(["CURRENT PROCESS"]);
+  rows.push(["Process Name", processName.value || "N/A"]);
+  rows.push(["Type", processType.value || "N/A"]);
+  rows.push(["Film/Paper", filmName.value || "N/A"]);
+  rows.push(["Developer", developerName.value || "N/A"]);
+  rows.push(["Temperature (°C)", temperature.value || "N/A"]);
+  rows.push(["Push/Pull", pushPull.value || "N/A"]);
+  rows.push(["Notes", (notes.value || "N/A").replace(/\n/g, " | ")]);
+  rows.push([]);
+  
+  // Steps
+  rows.push(["STEPS"]);
+  rows.push(["Step #", "Name", "Duration (MM:SS)", "Tip"]);
+  steps.forEach((s, i) => {
+    const duration = formatTime(s.min * 60 + s.sec);
+    rows.push([
+      i + 1,
+      s.name,
+      duration,
+      s.tip || ""
+    ]);
+  });
+  
+  const totalSec = steps.reduce((sum, s) => sum + (s.min * 60 + s.sec), 0);
+  rows.push([]);
+  rows.push(["Total Time", formatTime(totalSec)]);
+  rows.push([]);
+  
+  // All saved processes
+  rows.push(["ALL SAVED PROCESSES"]);
+  rows.push(["Name", "Type", "Film/Paper", "Developer", "Temp", "Push/Pull", "Total Time", "Steps"]);
+  
   Object.entries(processes).forEach(([name, p]) => {
     let totalSeconds = 0;
-    const stepText = p.steps.map(s => {
+    const stepText = p.steps.map((s, idx) => {
       const secs = s.min * 60 + s.sec;
       totalSeconds += secs;
-      const tip = s.tip ? ` [${s.tip}]` : "";
-      return `${s.name} ${formatTime(secs)}${tip}`;
+      return `${idx + 1}. ${s.name} (${formatTime(secs)})${s.tip ? " - " + s.tip : ""}`;
     }).join(" | ");
 
     rows.push([
@@ -1073,9 +1106,8 @@ function exportCSV() {
       p.developerName || "",
       p.temperature || "",
       p.pushPull || "",
-      (p.notes || "").replace(/\n/g, " "),
-      stepText,
-      Math.round(totalSeconds / 60)
+      formatTime(totalSeconds),
+      stepText
     ]);
   });
 
@@ -1083,8 +1115,107 @@ function exportCSV() {
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `darkroom-log-${new Date().toISOString().split('T')[0]}.csv`;
+  a.download = `darkroom-${processName.value || "process"}-${new Date().toISOString().split('T')[0]}.csv`;
   a.click();
+}
+
+function exportPDF() {
+  if (steps.length === 0) {
+    alert("Add steps first");
+    return;
+  }
+
+  const totalSec = steps.reduce((sum, s) => sum + (s.min * 60 + s.sec), 0);
+  const date = new Date().toLocaleDateString();
+
+  const element = document.createElement("div");
+  element.style.padding = "20px";
+  element.style.fontFamily = "Arial, sans-serif";
+  element.style.backgroundColor = "#fff";
+  element.style.color = "#000";
+
+  element.innerHTML = `
+    <h1 style="text-align: center; color: #333; border-bottom: 2px solid #333; padding-bottom: 10px;">
+      Darkroom Process Timer Report
+    </h1>
+    
+    <div style="margin-top: 20px; padding: 15px; background: #f5f5f5; border-left: 4px solid #333;">
+      <h2 style="margin-top: 0; color: #333;">Process Details</h2>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr style="background: #e8e8e8;">
+          <td style="padding: 8px; font-weight: bold;">Process Name:</td>
+          <td style="padding: 8px;">${processName.value || "N/A"}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px; font-weight: bold;">Type:</td>
+          <td style="padding: 8px;">${processType.value || "N/A"}</td>
+        </tr>
+        <tr style="background: #f0f0f0;">
+          <td style="padding: 8px; font-weight: bold;">Film/Paper:</td>
+          <td style="padding: 8px;">${filmName.value || "N/A"}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px; font-weight: bold;">Developer:</td>
+          <td style="padding: 8px;">${developerName.value || "N/A"}</td>
+        </tr>
+        <tr style="background: #f0f0f0;">
+          <td style="padding: 8px; font-weight: bold;">Temperature:</td>
+          <td style="padding: 8px;">${temperature.value || "N/A"}°C</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px; font-weight: bold;">Push/Pull:</td>
+          <td style="padding: 8px;">${pushPull.value || "N/A"}</td>
+        </tr>
+        <tr style="background: #f0f0f0;">
+          <td style="padding: 8px; font-weight: bold;">Total Duration:</td>
+          <td style="padding: 8px; font-weight: bold; color: #333;">${formatTime(totalSec)}</td>
+        </tr>
+        ${notes.value ? `<tr>
+          <td style="padding: 8px; font-weight: bold;">Notes:</td>
+          <td style="padding: 8px;">${notes.value.replace(/\n/g, "<br>")}</td>
+        </tr>` : ""}
+      </table>
+    </div>
+
+    <div style="margin-top: 20px; padding: 15px; background: #f5f5f5;">
+      <h2 style="margin-top: 0; color: #333;">Process Steps</h2>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+        <thead>
+          <tr style="background: #333; color: white;">
+            <th style="padding: 10px; text-align: left; border: 1px solid #999;">#</th>
+            <th style="padding: 10px; text-align: left; border: 1px solid #999;">Step Name</th>
+            <th style="padding: 10px; text-align: center; border: 1px solid #999;">Duration</th>
+            <th style="padding: 10px; text-align: left; border: 1px solid #999;">Tip/Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${steps.map((s, i) => `
+            <tr style="background: ${i % 2 === 0 ? '#ffffff' : '#f9f9f9'};">
+              <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">${i + 1}</td>
+              <td style="padding: 10px; border: 1px solid #ddd;">${s.name}</td>
+              <td style="padding: 10px; border: 1px solid #ddd; text-align: center; font-weight: bold;">${formatTime(s.min * 60 + s.sec)}</td>
+              <td style="padding: 10px; border: 1px solid #ddd;">${s.tip || "-"}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+
+    <div style="margin-top: 20px; padding: 15px; background: #f0f0f0; border-left: 4px solid #666;">
+      <p style="margin: 0;"><strong>Generated:</strong> ${date}</p>
+      <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">Darkroom Process Timer</p>
+    </div>
+  `;
+
+  const opt = {
+    margin: 10,
+    filename: `darkroom-${processName.value || "process"}-${new Date().toISOString().split('T')[0]}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+  };
+
+  html2pdf().set(opt).from(element).save();
 }
 
 function printCard() {
