@@ -170,7 +170,7 @@ hr {
 </div>
 
 <script>
-  const timer = document.getElementById("timer");
+const timer = document.getElementById("timer");
 const currentStep = document.getElementById("currentStep");
 const startBtn = document.getElementById("startBtn");
 const pauseBtn = document.getElementById("pauseBtn");
@@ -247,17 +247,36 @@ function removeStep(i) {
 }
 
 function renderSteps() {
+  function renderSteps() {
   const box = document.getElementById("steps");
   box.innerHTML = "";
-  steps.forEach((s,i)=>{
+
+  steps.forEach((s, i) => {
     const div = document.createElement("div");
-    div.className="step";
-    div.innerHTML = `
-      <input placeholder="Step" value="${s.name}" onchange="steps[${i}].name=this.value">
-      <input type="number" placeholder="Min" value="${s.min}" onchange="steps[${i}].min=Number(this.value)">
-      <input type="number" placeholder="Sec" value="${s.sec}" onchange="steps[${i}].sec=Number(this.value)">
-      <button onclick="removeStep(${i})">×</button>
-    `;
+    div.className = "step";
+
+    const nameInput = document.createElement("input");
+    nameInput.placeholder = "Step";
+    nameInput.value = s.name;
+    nameInput.oninput = e => steps[i].name = e.target.value;
+
+    const minInput = document.createElement("input");
+    minInput.type = "number";
+    minInput.placeholder = "Min";
+    minInput.value = s.min;
+    minInput.oninput = e => steps[i].min = Number(e.target.value);
+
+    const secInput = document.createElement("input");
+    secInput.type = "number";
+    secInput.placeholder = "Sec";
+    secInput.value = s.sec;
+    secInput.oninput = e => steps[i].sec = Number(e.target.value);
+
+    const btn = document.createElement("button");
+    btn.textContent = "×";
+    btn.onclick = () => removeStep(i);
+
+    div.append(nameInput, minInput, secInput, btn);
     box.appendChild(div);
   });
 }
