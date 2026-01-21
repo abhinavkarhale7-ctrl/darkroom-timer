@@ -1,850 +1,701 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <title>Darkroom Process Timer</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Darkroom Timer">
-<meta name="theme-color" content="#0a0a0a">
-<!-- Removed PDF library (html2pdf) per request - PDF saving option removed -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Darkroom Timer" />
+<meta name="theme-color" content="#0a0a0a" />
+<meta name="format-detection" content="telephone=no,email=no,address=no" />
+
 <style>
-* {
-  -webkit-tap-highlight-color: transparent;
-  box-sizing: border-box;
-}
-
-html, body {
-  height: 100%;
-  margin: 0;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, monospace;
-  background: #0a0a0a;
-  color: #d0d0d0;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-.app {
-  max-width: 900px;
-  margin: 20px auto;
-  padding: 12px;
-}
-
-/* layout */
-.app-grid {
-  display: block;
-  gap: 18px;
-}
-@media (min-width: 820px) {
-  .app-grid {
-    display: grid;
-    grid-template-columns: 1fr 340px;
-    align-items: start;
-    gap: 20px;
+  /* Design tokens */
+  :root{
+    --bg: #0a0a0a;
+    --panel: #0f0f0f;
+    --muted: #999;
+    --accent: #9d84b7;
+    --accent-strong: #7c5aa8;
+    --success: #4ade80;
+    --warning: #fbbf24;
+    --danger: #ff6b6b;
+    --border: #2b2b2b;
+    --text: #d0d0d0;
+    --input-bg: #121212;
+    --radius: 8px;
+    --gap: 12px;
+    --touch: 48px;
+    --shadow: 0 6px 18px rgba(0,0,0,0.6);
+    --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Helvetica Neue", monospace;
+    --ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   }
-}
 
-/* headings & basic form */
-h1 {
-  text-align: center;
-  font-size: 20px;
-  margin: 6px 0 14px 0;
-}
+  /* Reset & base */
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html,body { height:100%; margin:0; font-family:var(--ui); background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+  .app { max-width:1100px; margin:22px auto; padding:18px; }
 
-label { display:block; font-size:12px; margin-bottom:4px; }
+  /* Layout */
+  .app-grid { display:grid; gap:24px; grid-template-columns: 1fr; }
+  @media (min-width:900px) { .app-grid { grid-template-columns: 1fr 360px; align-items:start; } }
 
-input, select, textarea, button {
-  width: 100%;
-  margin-bottom: 8px;
-  padding: 8px;
-  font-size: 14px;
-  border-radius: 6px;
-  border: 1px solid #444;
-  background: #121212;
-  color: #d0d0d0;
-  outline: none;
-}
+  h1 { text-align:center; margin:0 0 12px 0; font-size:20px; letter-spacing:0.2px; }
 
-textarea { resize: vertical; min-height: 64px; }
+  /* Panels */
+  .panel { background:var(--panel); border-radius:var(--radius); padding:14px; border:1px solid var(--border); box-shadow:var(--shadow); }
+  .panel + .panel { margin-top:var(--gap); }
 
-/* buttons */
-button {
-  min-height: 40px;
-  font-size: 14px;
-  background: #9d84b7;
-  color: #000;
-  cursor: pointer;
-  transition: transform 0.12s ease, opacity 0.12s ease;
-  border: none;
-  border-radius: 6px;
-}
-button:active { transform: translateY(1px); }
-button:disabled { opacity: 0.5; cursor: not-allowed; }
+  label { display:block; font-size:12px; color:var(--muted); margin-bottom:6px; }
 
-.secondary {
-  background: #2b2b2b;
-  color: #d0c5e6;
-  border: 1px solid #3d3d3d;
-}
+  input, select, textarea, button {
+    font-size:14px;
+    color:var(--text);
+    background:var(--input-bg);
+    border:1px solid #2e2e2e;
+    border-radius:8px;
+    padding:10px 12px;
+    outline:none;
+  }
 
-/* controls layout (Start bigger) */
-.controls-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
+  textarea { min-height:80px; resize:vertical; }
 
-.controls-row .start-btn { flex: 2 1 0; min-width: 120px; }
-.controls-row button:not(.start-btn), .controls-row .audio-toggle { flex: 1 1 0; }
+  input::placeholder, textarea::placeholder { color:#7b7b7b; }
 
-/* action-row (Save / Import / Export / Print) - side-by-side layout */
-.action-row {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.action-row button {
-  flex: 1 1 48%;
-  min-width: 120px;
-}
+  /* Buttons */
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; border:none; border-radius:8px; padding:10px 14px; background:var(--accent); color:#000; min-height:var(--touch); transition:transform .08s ease, box-shadow .08s; }
+  .btn:active{ transform:translateY(1px); }
+  .btn.secondary { background:transparent; color:var(--accent); border:1px solid var(--accent); min-height:44px; }
+  .btn.ghost { background:transparent; color:var(--text); border:1px solid var(--border); }
 
-/* step list */
-.step {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 8px;
-  align-items: center;
-}
+  /* Controls row: primary start button larger */
+  .controls-row { display:flex; gap:10px; align-items:center; margin-top:12px; }
+  .controls-row .start { flex:2 1 0; min-width:120px; }
+  .controls-row .small { flex:1 1 0; min-width:72px; }
 
-/* step inputs: name should have more space; min/sec fixed small width; tip flexible */
-.step-inputs {
-  display: flex;
-  gap: 8px;
-  flex: 1;
-  align-items: center;
-}
-.step-inputs input[type="text"] { flex: 2 1 0; min-width: 140px; }
-.step-inputs input.step-tip { flex: 1 1 0; }
+  /* Action row: two per row on narrow screens, single row on wide */
+  .action-row { display:grid; gap:10px; grid-template-columns: repeat(2, 1fr); margin-top:12px; }
+  @media (min-width:640px) { .action-row { grid-auto-flow:column; grid-auto-columns: 1fr; grid-template-columns: none; } }
 
-.step-inputs input[type="number"] { width: 64px; padding: 8px; }
+  /* Steps list layout */
+  #steps { display:flex; flex-direction:column; gap:8px; margin-top:6px; }
+  .step {
+    display:grid;
+    gap:8px;
+    grid-template-columns: 1fr 96px 64px 1fr 40px; /* name / min / sec / tip / remove */
+    align-items:center;
+  }
+  .step .name { padding:10px 12px; }
+  .step .min, .step .sec { padding:8px 10px; width:100%; }
+  .step .tip { padding:10px 12px; }
+  .step .remove { width:36px; height:36px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; }
 
-/* small remove button so the name doesn't get pushed out */
-.step-delete {
-  width: 36px;
-  min-width: 36px;
-  min-height: 36px;
-  padding: 6px;
-  border-radius: 6px;
-  font-size: 14px;
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
+  /* Responsive step stacking for small screens */
+  @media (max-width:720px){
+    .step { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; }
+    .step .name { grid-column: 1 / -1; }
+    .step .min { grid-column: 1 / 2; }
+    .step .sec { grid-column: 2 / 3; }
+    .step .tip { grid-column: 1 / -1; }
+    .step .remove { grid-column: 2 / 3; justify-self:end; }
+  }
 
-/* timer & visual */
-.timer {
-  text-align: center;
-  font-size: 44px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  margin: 12px 0;
-  transition: color 0.2s, transform 0.12s;
-  letter-spacing: -2px;
-}
-@media (min-width: 820px) { .timer { font-size: 56px; } }
-.timer.running { color: #4ade80; }
-.timer.paused { color: #fbbf24; }
-.timer.done { color: #ff6b6b; }
+  /* Timer, progress and info */
+  .timer { text-align:center; font-weight:700; font-variant-numeric:tabular-nums; font-size:44px; margin:10px 0; letter-spacing:-1px; }
+  @media (min-width:900px){ .timer{ font-size:56px; } }
+  .timer.running { color:var(--success); }
+  .timer.paused { color:var(--warning); }
+  .timer.done { color:var(--danger); }
 
-.current {
-  text-align: center;
-  font-size: 13px;
-  padding: 8px;
-  border: 2px solid #9d84b7;
-  border-radius: 8px;
-  margin-bottom: 8px;
-}
+  #progress { height:12px; background:#131313; border-radius:8px; overflow:hidden; border:1px solid var(--border); }
+  #bar { height:100%; width:0%; background:var(--accent); transition: width .08s linear; }
 
-.info-box {
-  background: #0f0f0f;
-  border: 1px solid #2f2a3f;
-  padding: 8px;
-  border-radius: 8px;
-  margin-bottom: 8px;
-  font-size: 13px;
-  text-align: center;
-  color: #d0d0d0;
-}
+  .current { text-align:center; padding:8px; border-radius:8px; border:1px solid rgba(157,132,183,0.12); margin-bottom:8px; font-size:13px; }
 
-.upcoming {
-  background: #0f0f0f;
-  border-left: 3px solid #9d84b7;
-  padding: 8px;
-  margin-bottom: 8px;
-  font-size: 13px;
-  max-height: 140px;
-  overflow-y: auto;
-  border-radius: 6px;
-}
-.upcoming-item { padding: 6px 0; color: #aaa; }
-.upcoming-item.next { color: #4ade80; font-weight: 700; }
-.step-tip { font-size: 11px; color: #9aa; margin-top: 6px; }
+  /* Sidebar items */
+  .sidebar-actions { display:flex; gap:10px; margin-top:8px; flex-wrap:wrap; }
+  .sidebar-actions > * { flex:1 1 auto; }
 
-/* progress */
-#progress { height: 14px; background: #1a1a1a; border-radius: 6px; overflow: hidden; border: 1px solid #2b2b2b; }
-#bar { height: 100%; width: 0%; background: #9d84b7; transition: width 0.08s linear; }
+  /* Small helpers */
+  .muted { color:var(--muted); font-size:13px; }
 
-/* responsiveness */
-@media (max-width: 420px) {
-  body { padding: 6px; }
-  .app { margin: 6px; padding: 6px; }
-  input, select, textarea, button { font-size: 14px; padding: 8px; }
-  .timer { font-size: 48px; }
-}
+  /* Accessibility focus */
+  input:focus, select:focus, textarea:focus, button:focus { box-shadow:0 0 0 4px rgba(157,132,183,0.12); border-color:var(--accent-strong); }
 
-/* focus */
-button:focus, input:focus, select:focus, textarea:focus {
-  box-shadow: 0 0 0 3px rgba(157,132,183,0.16);
-  border-color: #a98ac3;
-}
+  /* Make selects readable on desktop */
+  select { -webkit-appearance:none; appearance:none; background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: calc(100% - 18px) calc(1em + 2px), calc(100% - 13px) calc(1em + 2px); background-size: 6px 6px, 6px 6px; background-repeat: no-repeat; padding-right:36px; }
+
+  /* Ensure savedProcesses shows long names */
+  #savedProcesses { text-overflow:ellipsis; white-space:nowrap; overflow:hidden; }
+
+  /* Reduce visual noise on very small screens */
+  @media (max-width:360px){
+    .app { padding:10px; margin:10px auto; }
+    .controls-row .start { min-width:100px; }
+  }
 </style>
 </head>
-
 <body>
-<div class="app">
-  <h1>Darkroom Process Timer</h1>
+  <div class="app">
+    <h1>Darkroom Process Timer</h1>
 
-  <div class="app-grid">
-    <div class="main">
-      <label>Process type</label>
-      <select id="processType" onchange="updateProcessNames()">
-        <option>Film</option>
-        <option>Printing</option>
-        <option>Alternative Printing</option>
-      </select>
+    <div class="app-grid">
+      <!-- Main column -->
+      <div class="panel">
+        <label>Process type</label>
+        <select id="processType" onchange="updateProcessNames()">
+          <option>Film</option>
+          <option>Printing</option>
+          <option>Alternative Printing</option>
+        </select>
 
-      <label>Process name</label>
-      <select id="processName"></select>
+        <label style="margin-top:8px">Process name</label>
+        <select id="processName"></select>
 
-      <label>Film / Paper</label>
-      <input id="filmName" placeholder="e.g. Kodak Portra 400">
+        <div style="display:flex;gap:12px;margin-top:8px;">
+          <div style="flex:1 1 auto">
+            <label>Film / Paper</label>
+            <input id="filmName" placeholder="e.g. Kodak Portra 400" />
+          </div>
+          <div style="width:120px">
+            <label>Temp (°C)</label>
+            <input id="temperature" type="number" placeholder="20" />
+          </div>
+        </div>
 
-      <label>Developer</label>
-      <input id="developerName" placeholder="e.g. D-76">
+        <div style="display:flex;gap:12px;">
+          <div style="flex:1">
+            <label>Developer</label>
+            <input id="developerName" placeholder="e.g. D-76" />
+          </div>
+          <div style="width:150px">
+            <label>Push / Pull</label>
+            <select id="pushPull">
+              <option>Pull -2</option>
+              <option>Pull -1</option>
+              <option selected>Normal</option>
+              <option>Push +1</option>
+              <option>Push +2</option>
+              <option>Push +3</option>
+            </select>
+          </div>
+        </div>
 
-      <label>Temperature(°C)</label>
-      <input id="temperature" type="number" placeholder="20">
+        <label>Variation / Notes</label>
+        <textarea id="notes" placeholder="Add variations or notes"></textarea>
 
-      <label>Push / Pull</label>
-      <select id="pushPull">
-        <option>Pull -2</option>
-        <option>Pull -1</option>
-        <option selected>Normal</option>
-        <option>Push +1</option>
-        <option>Push +2</option>
-        <option>Push +3</option>
-      </select>
+        <hr style="border:none;border-top:1px solid var(--border);margin:12px 0;">
 
-      <label>Variation / Notes</label>
-      <textarea id="notes"></textarea>
+        <label>Steps</label>
+        <div id="steps" aria-live="polite"></div>
+        <div style="margin-top:10px;display:flex;gap:10px;">
+          <button class="btn secondary" onclick="addStep()">+ Add Step</button>
+          <div style="flex:1"></div>
+        </div>
 
-      <hr>
+        <hr style="border:none;border-top:1px solid var(--border);margin:12px 0;">
 
-      <div id="steps"></div>
-      <button class="secondary" onclick="addStep()">+ Add Step</button>
+        <div class="info-box muted" id="totalTime">Total: 00:00</div>
+        <div class="current" id="currentStep">Ready</div>
+        <div style="text-align:center;font-size:12px;color:var(--muted);margin-bottom:6px;">
+          <span id="stepCounter">-</span>
+        </div>
 
-      <hr>
+        <div class="timer" id="timer">00:00</div>
+        <div id="progress"><div id="bar"></div></div>
 
-      <div class="info-box" id="totalTime"></div>
-      <div class="upcoming" id="upcomingSteps"></div>
-      <div class="info-box" id="pauseTime" style="display:none;"></div>
+        <div class="controls-row">
+          <button id="startBtn" class="btn start" onclick="start()">Start</button>
+          <button id="pauseBtn" class="btn secondary small" onclick="pause()">Pause</button>
+          <button id="stopBtn" class="btn secondary small" onclick="stopTimer()">Stop</button>
+          <button id="audioToggle" class="btn ghost small" onclick="toggleAudio()">🔊</button>
+        </div>
 
-      <div class="current" id="currentStep">Ready</div>
-      <div style="text-align:center;font-size:12px;color:#999;margin-bottom:6px;">
-        <span class="step-counter" id="stepCounter"></span>
+        <div class="action-row" role="group" aria-label="File actions">
+          <button class="btn" onclick="saveProcess()">Save Process</button>
+          <button class="btn secondary" onclick="importProcess()">Import JSON</button>
+          <button class="btn secondary" onclick="exportProcess()">Export JSON</button>
+          <button class="btn secondary" onclick="printCard()">Print</button>
+        </div>
       </div>
 
-      <div class="timer" id="timer">00:00</div>
-      <div id="progress">
-        <div id="bar"></div>
+      <!-- Sidebar -->
+      <div class="panel">
+        <label>Saved processes</label>
+        <select id="savedProcesses" onchange="loadProcess()"></select>
+
+        <div class="sidebar-actions" style="margin-top:10px;">
+          <button class="btn secondary" onclick="deleteProcess()">Delete</button>
+          <button class="btn secondary" onclick="exportCSV()">Export CSV</button>
+        </div>
+
+        <div style="margin-top:16px;color:var(--muted);font-size:13px;">
+          Tip: Tap a saved process to load it. Use the CSV export to share/process on desktop apps.
+        </div>
       </div>
-
-      <div class="controls-row" style="margin-top:10px;">
-        <button id="startBtn" class="start-btn" onclick="start()">Start</button>
-        <button id="pauseBtn" class="secondary" onclick="pause()">Pause</button>
-        <button id="stopBtn" class="secondary" onclick="stopTimer()">Stop</button>
-        <button class="audio-toggle secondary" id="audioToggle" onclick="toggleAudio()" title="Toggle sound">🔊</button>
-      </div>
-
-      <hr>
-
-      <div class="action-row" style="margin-bottom:8px;">
-        <button onclick="saveProcess()">Save Process</button>
-        <button class="secondary" onclick="importProcess()">Import JSON</button>
-        <button class="secondary" onclick="exportProcess()">Export JSON</button>
-        <button class="secondary" onclick="printCard()">Print</button>
-      </div>
-
     </div>
-
-    <aside class="sidebar">
-      <label>Saved processes</label>
-      <select id="savedProcesses" onchange="loadProcess()"></select>
-
-      <div style="display:flex;gap:8px;margin-top:8px;">
-        <button class="secondary" onclick="deleteProcess()">Delete</button>
-        <button class="secondary" onclick="exportCSV()">📊 CSV</button>
-      </div>
-
-      <hr>
-      <!-- history section removed per request -->
-    </aside>
   </div>
 
-  <input type="file" id="fileInput" hidden>
-</div>
+  <input type="file" id="fileInput" hidden />
 
 <script>
-// ===== DOM Elements =====
-const timer = document.getElementById("timer");
-const currentStep = document.getElementById("currentStep");
-const startBtn = document.getElementById("startBtn");
-const pauseBtn = document.getElementById("pauseBtn");
-const stopBtn = document.getElementById("stopBtn");
-const bar = document.getElementById("bar");
-const processType = document.getElementById("processType");
-const processName = document.getElementById("processName");
-const filmName = document.getElementById("filmName");
-const developerName = document.getElementById("developerName");
-const temperature = document.getElementById("temperature");
-const pushPull = document.getElementById("pushPull");
-const notes = document.getElementById("notes");
-const savedProcesses = document.getElementById("savedProcesses");
-const fileInput = document.getElementById("fileInput");
+  // DOM refs
+  const timer = document.getElementById("timer");
+  const currentStep = document.getElementById("currentStep");
+  const startBtn = document.getElementById("startBtn");
+  const pauseBtn = document.getElementById("pauseBtn");
+  const stopBtn = document.getElementById("stopBtn");
+  const bar = document.getElementById("bar");
+  const processType = document.getElementById("processType");
+  const processName = document.getElementById("processName");
+  const filmName = document.getElementById("filmName");
+  const developerName = document.getElementById("developerName");
+  const temperature = document.getElementById("temperature");
+  const pushPull = document.getElementById("pushPull");
+  const notes = document.getElementById("notes");
+  const savedProcesses = document.getElementById("savedProcesses");
+  const fileInput = document.getElementById("fileInput");
+  const totalTimeEl = document.getElementById("totalTime");
+  const stepCounter = document.getElementById("stepCounter");
 
-// ===== State Management =====
-let currentProcessName = null; // key used in saved processes
-let steps = [];
-let timerIndex = 0;
-let remainingSeconds = 0;
-let timerInterval = null;
-let pauseInterval = null;
-let audioEnabled = localStorage.getItem("darkroomAudio") !== "false";
-let isRunning = false;
-let isPaused = false;
-let pausedSeconds = 0;
-let pauseStartTime = null;
-let wakelock = null;
-// history stored but UI removed
-let history = JSON.parse(localStorage.getItem("darkroomHistory")) || [];
-let processes = JSON.parse(localStorage.getItem("darkroomProcesses")) || {};
+  // State
+  let currentProcessName = null;
+  let steps = [];
+  let timerIndex = 0;
+  let remainingSeconds = 0;
+  let timerInterval = null;
+  let pauseInterval = null;
+  let audioEnabled = localStorage.getItem("darkroomAudio") !== "false";
+  let isRunning = false;
+  let isPaused = false;
+  let pausedSeconds = 0;
+  let pauseStartTime = null;
+  let wakelock = null;
+  let history = JSON.parse(localStorage.getItem("darkroomHistory")) || [];
+  let processes = JSON.parse(localStorage.getItem("darkroomProcesses")) || {};
 
-// ===== Process Options =====
-const processOptions = {
-  "Film": ["C-41", "ECN-2", "E-6", "B&W", "B&W Reversal"],
-  "Printing": ["B&W Contact Printing", "RA-4 Contact Printing", "B&W Reversal Printing", "RA-4 Reversal Printing"],
-  "Alternative Printing": ["Cyanotype", "Salt Printing", "Carbon Transfer", "Vandyke Brown", "Albumen", "Gum Bichromate", "Platinum/Palladium", "Bromoil"]
-};
+  const processOptions = {
+    "Film": ["C-41", "ECN-2", "E-6", "B&W", "B&W Reversal"],
+    "Printing": ["B&W Contact Printing", "RA-4 Contact Printing", "B&W Reversal Printing", "RA-4 Reversal Printing"],
+    "Alternative Printing": ["Cyanotype", "Salt Printing", "Carbon Transfer", "Vandyke Brown", "Albumen", "Gum Bichromate", "Platinum/Palladium", "Bromoil"]
+  };
 
-// ===== Initialization =====
-function init() {
-  addStep("Developer", 8, 0, "Agitate every 30 sec");
-  addStep("Stop", 0, 30, "");
-  addStep("Fix", 5, 0, "");
-  addStep("Wash", 10, 0, "Multiple rinses");
-  refreshProcessList();
-  updateProcessNames();
-  renderSteps();
-  updateTotalTime();
-  pauseInterval = setInterval(updatePauseTime, 200);
-  updateUIState();
-  document.getElementById("audioToggle").style.opacity = audioEnabled ? "1" : "0.5";
-}
+  // Initialization
+  function init(){
+    addStep("Developer",8,0,"Agitate every 30 sec");
+    addStep("Stop",0,30,"");
+    addStep("Fix",5,0,"");
+    addStep("Wash",10,0,"Multiple rinses");
+    refreshProcessList();
+    updateProcessNames();
+    renderSteps();
+    updateTotalTime();
+    pauseInterval = setInterval(updatePauseTime,200);
+    updateUIState();
+    document.getElementById("audioToggle").style.opacity = audioEnabled ? "1" : "0.5";
+  }
 
-// ===== Helpers =====
-function formatTime(seconds) {
-  const total = Math.max(0, Math.floor(seconds));
-  const m = Math.floor(total / 60);
-  const s = total % 60;
-  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-}
+  // Helpers
+  function formatTime(seconds){
+    const total = Math.max(0, Math.floor(seconds));
+    const m = Math.floor(total/60);
+    const s = total % 60;
+    return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+  }
 
-function updateUIState() {
-  const timerRunning = isRunning;
-  startBtn.disabled = timerRunning;
-  pauseBtn.disabled = !timerRunning;
-  pauseBtn.textContent = isPaused ? "▶ Resume" : "⏸ Pause";
-  stopBtn.disabled = !timerRunning && !isPaused;
-}
+  function updateUIState(){
+    startBtn.disabled = isRunning;
+    pauseBtn.disabled = !isRunning;
+    pauseBtn.textContent = isPaused ? "▶ Resume" : "⏸ Pause";
+    stopBtn.disabled = !isRunning && !isPaused;
+  }
 
-// ===== Steps =====
-function addStep(name = "", min = 0, sec = 0, tip = "") {
-  steps.push({ name, min, sec, tip });
-  renderSteps();
-  updateTotalTime();
-}
+  // Steps UI
+  function addStep(name="",min=0,sec=0,tip=""){
+    steps.push({name,min,sec,tip});
+    renderSteps();
+    updateTotalTime();
+  }
 
-function removeStep(i) {
-  steps.splice(i, 1);
-  renderSteps();
-  updateTotalTime();
-}
+  function removeStep(i){
+    steps.splice(i,1);
+    renderSteps();
+    updateTotalTime();
+  }
 
-function renderSteps() {
-  const box = document.getElementById("steps");
-  box.innerHTML = "";
+  function renderSteps(){
+    const box = document.getElementById("steps");
+    box.innerHTML = "";
+    steps.forEach((s,i) => {
+      const row = document.createElement("div");
+      row.className = "step";
 
-  steps.forEach((s, i) => {
-    const div = document.createElement("div");
-    div.className = "step";
+      const name = document.createElement("input");
+      name.className = "name";
+      name.type = "text";
+      name.placeholder = "Step name";
+      name.value = s.name;
+      name.disabled = isRunning;
+      name.oninput = e => { steps[i].name = e.target.value; updateUpcomingSteps(); };
 
-    const inputsDiv = document.createElement("div");
-    inputsDiv.className = "step-inputs";
+      const min = document.createElement("input");
+      min.className = "min";
+      min.type = "number";
+      min.min = 0;
+      min.value = s.min;
+      min.disabled = isRunning;
+      min.oninput = e => { steps[i].min = Math.max(0, Number(e.target.value)||0); updateTotalTime(); };
 
-    const nameInput = document.createElement("input");
-    nameInput.type = "text";
-    nameInput.placeholder = "Step name";
-    nameInput.value = s.name;
-    nameInput.disabled = isRunning;
-    nameInput.oninput = e => { steps[i].name = e.target.value; updateUpcomingSteps(); };
+      const sec = document.createElement("input");
+      sec.className = "sec";
+      sec.type = "number";
+      sec.min = 0; sec.max = 59;
+      sec.value = s.sec;
+      sec.disabled = isRunning;
+      sec.oninput = e => { steps[i].sec = Math.max(0, Math.min(59, Number(e.target.value)||0)); updateTotalTime(); };
 
-    const minInput = document.createElement("input");
-    minInput.type = "number";
-    minInput.placeholder = "M";
-    minInput.value = s.min;
-    minInput.disabled = isRunning;
-    minInput.min = "0";
-    minInput.className = "step-min";
-    minInput.oninput = e => { steps[i].min = Math.max(0, Number(e.target.value)); updateTotalTime(); };
+      const tip = document.createElement("input");
+      tip.className = "tip";
+      tip.type = "text";
+      tip.placeholder = "Tip (optional)";
+      tip.value = s.tip;
+      tip.disabled = isRunning;
+      tip.oninput = e => { steps[i].tip = e.target.value; };
 
-    const secInput = document.createElement("input");
-    secInput.type = "number";
-    secInput.placeholder = "S";
-    secInput.value = s.sec;
-    secInput.disabled = isRunning;
-    secInput.min = "0";
-    secInput.max = "59";
-    secInput.className = "step-sec";
-    secInput.oninput = e => { steps[i].sec = Math.max(0, Math.min(59, Number(e.target.value))); updateTotalTime(); };
+      const remove = document.createElement("button");
+      remove.className = "remove btn secondary";
+      remove.title = "Remove step";
+      remove.innerText = "✕";
+      remove.onclick = () => { if(!isRunning) removeStep(i); };
 
-    const tipInput = document.createElement("input");
-    tipInput.type = "text";
-    tipInput.placeholder = "Tip (e.g. Agitate every 30 sec)";
-    tipInput.value = s.tip || "";
-    tipInput.disabled = isRunning;
-    tipInput.className = "step-tip";
-    tipInput.oninput = e => { steps[i].tip = e.target.value; };
+      row.appendChild(name);
+      row.appendChild(min);
+      row.appendChild(sec);
+      row.appendChild(tip);
+      row.appendChild(remove);
 
-    inputsDiv.appendChild(nameInput);
-    inputsDiv.appendChild(minInput);
-    inputsDiv.appendChild(secInput);
-    inputsDiv.appendChild(tipInput);
+      box.appendChild(row);
+    });
+  }
 
-    const btn = document.createElement("button");
-    btn.className = "step-delete secondary";
-    btn.title = "Remove step";
-    btn.innerText = "✕";
-    btn.disabled = isRunning;
-    btn.onclick = () => removeStep(i);
+  function updateTotalTime(){
+    const total = steps.reduce((sum,s) => sum + ((s.min||0)*60 + (s.sec||0)), 0);
+    totalTimeEl.innerText = `Total: ${formatTime(total)}`;
+  }
 
-    div.appendChild(inputsDiv);
-    div.appendChild(btn);
-    box.appendChild(div);
-  });
-}
-
-// ===== Totals & Upcoming =====
-function updateTotalTime() {
-  let totalSec = 0;
-  steps.forEach(s => { totalSec += (s.min||0) * 60 + (s.sec||0); });
-  document.getElementById("totalTime").innerText = `Total: ${formatTime(totalSec)}`;
-}
-
-function updateUpcomingSteps() {
-  const upcoming = document.getElementById("upcomingSteps");
-  upcoming.innerHTML = "";
-
-  if (timerIndex < steps.length && isRunning) {
-    const current = steps[timerIndex];
-    const tip = current.tip || "";
-    const currentTime = formatTime((current.min||0) * 60 + (current.sec||0));
-    upcoming.innerHTML = `<div class="upcoming-item next">▶ ${current.name} (${currentTime})${tip ? "<br><small class='step-tip'>" + tip + "</small>" : ""}</div>`;
-
-    for (let i = timerIndex + 1; i < Math.min(timerIndex + 4, steps.length); i++) {
-      const s = steps[i];
-      const stepTime = formatTime((s.min||0) * 60 + (s.sec||0));
-      upcoming.innerHTML += `<div class="upcoming-item">${s.name} (${stepTime})</div>`;
-    }
-  } else if (!isRunning) {
-    for (let i = 0; i < Math.min(3, steps.length); i++) {
-      const s = steps[i];
-      const stepTime = formatTime((s.min||0) * 60 + (s.sec||0));
-      upcoming.innerHTML += `<div class="upcoming-item">${s.name} (${stepTime})</div>`;
+  function updateUpcomingSteps(){
+    const upcoming = document.getElementById("upcomingSteps");
+    if(!upcoming) return;
+    upcoming.innerHTML = "";
+    if(timerIndex < steps.length && isRunning){
+      const current = steps[timerIndex];
+      const tip = current.tip || "";
+      const currentTime = formatTime((current.min||0)*60+(current.sec||0));
+      upcoming.innerHTML = `<div class="muted">▶ ${current.name} (${currentTime}) ${tip ? ' — ' + tip : ''}</div>`;
+      for(let i=timerIndex+1;i<Math.min(timerIndex+4, steps.length); i++){
+        const s = steps[i];
+        upcoming.innerHTML += `<div class="muted">${s.name} (${formatTime((s.min||0)*60+(s.sec||0))})</div>`;
+      }
+    } else {
+      // show first few
+      for(let i=0;i<Math.min(3,steps.length); i++){
+        const s = steps[i];
+        upcoming.innerHTML += `<div class="muted">${s.name} (${formatTime((s.min||0)*60+(s.sec||0))})</div>`;
+      }
     }
   }
-}
 
-function getStepColor(name) {
-  const lower = (name || "").toLowerCase();
-  if (lower.includes("develop")) return "color-dev";
-  if (lower.includes("stop")) return "color-stop";
-  if (lower.includes("fix")) return "color-fix";
-  if (lower.includes("wash")) return "color-wash";
-  return "";
-}
-
-// ===== Timer control =====
-async function start() {
-  if (!steps.length) { alert("Add at least one step first"); return; }
-  isRunning = true; isPaused = false; timerIndex = 0; pausedSeconds = 0;
-  updateUIState(); updateUpcomingSteps();
-
-  try { if ("wakeLock" in navigator) wakelock = await navigator.wakeLock.request("screen"); }
-  catch (err) { console.log("Wake lock failed:", err); wakelock = null; }
-
-  nextStep();
-}
-
-function nextStep() {
-  if (timerInterval) clearInterval(timerInterval);
-  if (timerIndex >= steps.length) { endTimer(); return; }
-
-  const s = steps[timerIndex];
-  remainingSeconds = (s.min||0) * 60 + (s.sec||0);
-
-  currentStep.innerText = s.name || "Step";
-  currentStep.className = "current " + getStepColor(s.name || "");
-  document.getElementById("stepCounter").innerText = `${timerIndex + 1}/${steps.length}`;
-
-  if (s.tip) {
-    const tipEl = document.createElement("div");
-    tipEl.className = "step-tip";
-    tipEl.innerText = s.tip;
-    const existing = currentStep.querySelector(".step-tip");
-    if (existing) existing.remove();
-    currentStep.appendChild(tipEl);
-  } else {
-    const existing = currentStep.querySelector(".step-tip");
-    if (existing) existing.remove();
+  // Timer control
+  async function start(){
+    if(!steps.length){ alert("Add at least one step first"); return; }
+    isRunning = true; isPaused = false; timerIndex = 0; pausedSeconds = 0;
+    updateUIState(); updateUpcomingSteps();
+    try { if("wakeLock" in navigator) wakelock = await navigator.wakeLock.request("screen"); } catch(e){ wakelock = null; }
+    nextStep();
   }
 
-  bar.style.width = "0%";
-  tick();
-  timerInterval = setInterval(tick, 100);
-  updateUpcomingSteps();
-}
-
-function tick() {
-  const displaySeconds = Math.ceil(Math.max(0, remainingSeconds));
-  timer.innerText = formatTime(displaySeconds);
-
-  const step = steps[timerIndex] || { min: 0, sec: 0 };
-  const totalSeconds = (step.min || 0) * 60 + (step.sec || 0) || 1;
-  const elapsed = totalSeconds - remainingSeconds;
-  const progress = (elapsed / totalSeconds) * 100;
-  bar.style.width = Math.max(0, Math.min(100, progress)) + "%";
-
-  if (displaySeconds <= 10 && displaySeconds > 0) timer.style.transform = `scale(${1 + (displaySeconds % 2) * 0.04})`;
-  else timer.style.transform = "scale(1)";
-
-  remainingSeconds -= 0.1;
-
-  if (remainingSeconds <= 0) {
-    remainingSeconds = 0;
-    clearInterval(timerInterval);
-    playSound();
-    vibrate();
-    timerIndex++;
-    setTimeout(() => nextStep(), 450);
-  }
-}
-
-function pause() {
-  if (!isRunning) return;
-  if (!isPaused) {
-    clearInterval(timerInterval);
-    isPaused = true;
-    pauseStartTime = Date.now();
-    timer.className = "timer paused";
-    document.getElementById("pauseTime").style.display = "block";
-    document.getElementById("pauseTime").style.opacity = "1";
-  } else {
-    if (pauseStartTime) pausedSeconds += Math.floor((Date.now() - pauseStartTime) / 1000);
-    document.getElementById("pauseTime").style.display = "none";
-    isPaused = false;
-    timer.className = "timer running";
+  function nextStep(){
+    if(timerInterval) clearInterval(timerInterval);
+    if(timerIndex >= steps.length){ endTimer(); return; }
+    const s = steps[timerIndex];
+    remainingSeconds = (s.min||0)*60 + (s.sec||0);
+    currentStep.innerText = s.name || "Step";
+    currentStep.className = "current";
+    stepCounter.innerText = `${timerIndex+1}/${steps.length}`;
+    updateUpcomingSteps();
+    bar.style.width = "0%";
+    tick();
     timerInterval = setInterval(tick, 100);
   }
-  updateUIState();
-}
 
-function stopTimer() {
-  if (!isRunning && !isPaused) return;
-  if (timerInterval) clearInterval(timerInterval);
-  isRunning = false; isPaused = false;
-  timer.className = "timer";
-  timer.innerText = "00:00"; timer.style.transform = "scale(1)";
-  currentStep.innerText = "Ready"; currentStep.className = "current";
-  document.getElementById("stepCounter").innerText = "-";
-  document.getElementById("upcomingSteps").innerHTML = "";
-  document.getElementById("pauseTime").style.display = "none";
-  pausedSeconds = 0; bar.style.width = "0%";
-  if (wakelock) { wakelock.release().catch(e => console.warn("WakeLock release failed", e)); wakelock = null; }
-  updateUIState();
-}
-
-function endTimer() {
-  clearInterval(timerInterval);
-  isRunning = false;
-  timer.className = "timer done";
-  currentStep.innerText = "✅ Complete!";
-  currentStep.style.borderColor = "#4ade80";
-  timer.innerText = "00:00";
-  bar.style.width = "100%";
-  document.getElementById("stepCounter").innerText = "Done";
-  document.getElementById("upcomingSteps").innerHTML = "";
-  addToHistory(currentProcessName || "Quick Process");
-  playSound(); vibrate();
-  if (wakelock) { wakelock.release().catch(e => console.warn("WakeLock release failed", e)); wakelock = null; }
-  setTimeout(() => { startBtn.disabled = false; pauseBtn.disabled = true; }, 1000);
-  updateUIState();
-}
-
-function updatePauseTime() {
-  if (isPaused && pauseStartTime) {
-    const elapsed = pausedSeconds + Math.floor((Date.now() - pauseStartTime) / 1000);
-    document.getElementById("pauseTime").innerText = `⏸ Paused: ${formatTime(elapsed)}`;
-  }
-}
-
-// ===== Audio =====
-function vibrate() { if (navigator.vibrate) navigator.vibrate([50,30,50]); }
-
-function playSound() {
-  if (!audioEnabled) return;
-  try {
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = audioContext.createOscillator();
-    const gain = audioContext.createGain();
-    osc.connect(gain);
-    gain.connect(audioContext.destination);
-    osc.frequency.value = 880; osc.type = "sine";
-    gain.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-    osc.start(audioContext.currentTime);
-    osc.stop(audioContext.currentTime + 0.3);
-  } catch (e) { console.log("Audio failed:", e); }
-}
-
-function toggleAudio() {
-  audioEnabled = !audioEnabled;
-  localStorage.setItem("darkroomAudio", audioEnabled ? "true" : "false");
-  document.getElementById("audioToggle").style.opacity = audioEnabled ? "1" : "0.5";
-  if (audioEnabled) playSound();
-}
-
-// ===== Process management =====
-function updateProcessNames(selected = null) {
-  const type = processType.value;
-  const list = processOptions[type] || [];
-  processName.innerHTML = "";
-  list.forEach(name => {
-    const o = document.createElement("option");
-    o.value = o.textContent = name;
-    processName.appendChild(o);
-  });
-  if (selected) processName.value = selected;
-}
-
-function saveProcess() {
-  let name = currentProcessName;
-  if (!name) { name = prompt("Name this process (this will be the saved key)"); if (!name) return; }
-
-  processes[name] = {
-    processType: processType.value,
-    processName: processName.value || name, // ensure processName exists
-    filmName: filmName.value,
-    developerName: developerName.value,
-    temperature: temperature.value,
-    pushPull: pushPull.value,
-    notes: notes.value,
-    steps: JSON.parse(JSON.stringify(steps))
-  };
-
-  localStorage.setItem("darkroomProcesses", JSON.stringify(processes));
-  currentProcessName = name;
-  refreshProcessList();
-  addToHistory(name);
-  alert(`Saved: ${name}`);
-}
-
-function refreshProcessList() {
-  const sel = document.getElementById("savedProcesses");
-  sel.innerHTML = "<option value=''>Load saved process</option>";
-  Object.keys(processes).sort().forEach(p => {
-    const o = document.createElement("option");
-    o.value = o.textContent = p;
-    sel.appendChild(o);
-  });
-}
-
-function loadProcess() {
-  const name = savedProcesses.value;
-  if (!name) return;
-  currentProcessName = name;
-  const p = processes[name] || {};
-  processType.value = p.processType || "Film";
-  updateProcessNames(p.processName);
-  filmName.value = p.filmName || "";
-  developerName.value = p.developerName || "";
-  temperature.value = p.temperature || "";
-  pushPull.value = p.pushPull || "Normal";
-  notes.value = p.notes || "";
-  steps = JSON.parse(JSON.stringify(p.steps || []));
-  renderSteps();
-  updateTotalTime();
-}
-
-function deleteProcess() {
-  const name = savedProcesses.value;
-  if (!name) { alert("Select a process to delete"); return; }
-  if (!confirm(`Delete "${name}"?`)) return;
-  delete processes[name];
-  localStorage.setItem("darkroomProcesses", JSON.stringify(processes));
-  savedProcesses.value = "";
-  currentProcessName = null;
-  refreshProcessList();
-  alert("Deleted!");
-}
-
-// ===== Import/Export =====
-function exportProcess() {
-  const data = JSON.stringify(processes, null, 2);
-  const blob = new Blob([data], { type: "application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `darkroom-processes-${new Date().toISOString().split('T')[0]}.json`;
-  a.click();
-}
-function importProcess() { fileInput.click(); }
-fileInput.onchange = e => {
-  const file = e.target.files[0];
-  const r = new FileReader();
-  r.onload = () => {
-    try {
-      const imported = JSON.parse(r.result);
-      processes = { ...processes, ...imported };
-      localStorage.setItem("darkroomProcesses", JSON.stringify(processes));
-      refreshProcessList();
-      alert("Imported successfully!");
-    } catch {
-      alert("Invalid JSON file");
+  function tick(){
+    const displaySeconds = Math.ceil(Math.max(0, remainingSeconds));
+    timer.innerText = formatTime(displaySeconds);
+    const step = steps[timerIndex] || {min:0,sec:0};
+    const totalSeconds = (step.min||0)*60 + (step.sec||0) || 1;
+    const elapsed = totalSeconds - remainingSeconds;
+    const progress = (elapsed/totalSeconds)*100;
+    bar.style.width = `${Math.max(0, Math.min(100, progress))}%`;
+    if(displaySeconds <= 10 && displaySeconds > 0) timer.style.transform = `scale(${1 + (displaySeconds%2) * 0.03})`;
+    else timer.style.transform = "scale(1)";
+    remainingSeconds -= 0.1;
+    if(remainingSeconds <= 0){
+      remainingSeconds = 0;
+      clearInterval(timerInterval);
+      playSound(); vibrate();
+      timerIndex++;
+      setTimeout(()=> nextStep(), 500);
     }
+  }
+
+  function pause(){
+    if(!isRunning) return;
+    if(!isPaused){
+      clearInterval(timerInterval);
+      isPaused = true;
+      pauseStartTime = Date.now();
+      timer.classList.add('paused');
+    } else {
+      if(pauseStartTime) pausedSeconds += Math.floor((Date.now() - pauseStartTime)/1000);
+      isPaused = false;
+      timer.classList.remove('paused');
+      timerInterval = setInterval(tick,100);
+    }
+    updateUIState();
+  }
+
+  function stopTimer(){
+    if(timerInterval) clearInterval(timerInterval);
+    isRunning = false; isPaused = false;
+    timer.className = 'timer';
+    timer.innerText = "00:00";
+    currentStep.innerText = "Ready";
+    currentStep.className = 'current';
+    stepCounter.innerText = '-';
+    document.getElementById("upcomingSteps").innerHTML = '';
+    pausedSeconds = 0;
+    bar.style.width = '0%';
+    if(wakelock){ wakelock.release().catch(()=>{}); wakelock = null; }
+    updateUIState();
+  }
+
+  function endTimer(){
+    clearInterval(timerInterval);
+    isRunning = false;
+    timer.className = 'timer done';
+    currentStep.innerText = '✅ Complete!';
+    timer.innerText = '00:00';
+    bar.style.width = '100%';
+    stepCounter.innerText = 'Done';
+    updateUIState();
+    addToHistory(currentProcessName || 'Quick Process');
+  }
+
+  function updatePauseTime(){
+    // placeholder if we want a paused display later (kept for compatibility)
+  }
+
+  // Audio & haptics
+  function vibrate(){ if(navigator.vibrate) navigator.vibrate([50,30,50]); }
+  function playSound(){
+    if(!audioEnabled) return;
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = 880; osc.type = 'sine';
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.3);
+    } catch(e){ /* ignore */ }
+  }
+
+  function toggleAudio(){ audioEnabled = !audioEnabled; localStorage.setItem('darkroomAudio', audioEnabled ? 'true' : 'false'); document.getElementById('audioToggle').style.opacity = audioEnabled ? '1' : '0.5'; }
+
+  // Process persistence & UI
+  function updateProcessNames(selected=null){
+    const type = processType.value;
+    const list = processOptions[type] || [];
+    processName.innerHTML = '';
+    list.forEach(n => { const o = document.createElement('option'); o.value = o.textContent = n; processName.appendChild(o); });
+    if(selected) processName.value = selected;
+  }
+
+  function saveProcess(){
+    let key = currentProcessName;
+    if(!key){
+      key = prompt("Name this process (unique key):");
+      if(!key) return;
+    }
+    processes[key] = {
+      processType: processType.value,
+      processName: processName.value || key,
+      filmName: filmName.value,
+      developerName: developerName.value,
+      temperature: temperature.value,
+      pushPull: pushPull.value,
+      notes: notes.value,
+      steps: JSON.parse(JSON.stringify(steps))
+    };
+    localStorage.setItem('darkroomProcesses', JSON.stringify(processes));
+    currentProcessName = key;
+    refreshProcessList();
+    addToHistory(key);
+    alert('Saved: ' + key);
+  }
+
+  function refreshProcessList(){
+    savedProcesses.innerHTML = '<option value="">Load saved process</option>';
+    Object.keys(processes).sort().forEach(k => {
+      const o = document.createElement('option');
+      o.value = o.textContent = k;
+      savedProcesses.appendChild(o);
+    });
+  }
+
+  function loadProcess(){
+    const key = savedProcesses.value;
+    if(!key) return;
+    currentProcessName = key;
+    const p = processes[key] || {};
+    processType.value = p.processType || 'Film';
+    updateProcessNames(p.processName);
+    filmName.value = p.filmName || '';
+    developerName.value = p.developerName || '';
+    temperature.value = p.temperature || '';
+    pushPull.value = p.pushPull || 'Normal';
+    notes.value = p.notes || '';
+    steps = JSON.parse(JSON.stringify(p.steps || []));
+    renderSteps(); updateTotalTime();
+  }
+
+  function deleteProcess(){
+    const key = savedProcesses.value;
+    if(!key){ alert('Select a process'); return; }
+    if(!confirm(`Delete "${key}"?`)) return;
+    delete processes[key];
+    localStorage.setItem('darkroomProcesses', JSON.stringify(processes));
+    refreshProcessList();
+    currentProcessName = null;
+    alert('Deleted');
+  }
+
+  // Import/export
+  function exportProcess(){
+    const data = JSON.stringify(processes, null, 2);
+    const blob = new Blob([data], {type: 'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `darkroom-processes-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+  }
+
+  function importProcess(){ fileInput.click(); }
+  fileInput.onchange = e => {
+    const f = e.target.files[0];
+    if(!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try {
+        const imported = JSON.parse(r.result);
+        processes = {...processes, ...imported};
+        localStorage.setItem('darkroomProcesses', JSON.stringify(processes));
+        refreshProcessList();
+        alert('Imported');
+      } catch(err){
+        alert('Invalid JSON file');
+      }
+    };
+    r.readAsText(f);
   };
-  r.readAsText(file);
-};
 
-// Export CSV (All saved processes, Steps grouped into single column).
-// Improved/explicit column names and correct name handling:
-// Columns: Saved Key, Process Name, Type, Film/Paper, Developer, Temperature (°C), Push/Pull, Total Time, Notes, Steps
-function exportCSV() {
-  const processEntries = Object.entries(processes);
-  if (!processEntries.length) { alert("No saved processes to export."); return; }
-
-  const header = [
-    "Saved Key",
-    "Process Name",
-    "Type",
-    "Film/Paper",
-    "Developer",
-    "Temperature (°C)",
-    "Push/Pull",
-    "Total Time",
-    "Notes",
-    "Steps"
-  ];
-  const rows = [header];
-
-  processEntries.forEach(([savedKey, p]) => {
-    const proc = p || {};
-    const stepsArr = proc.steps || [];
-    const totalSec = stepsArr.reduce((s, st) => s + ((st.min || 0) * 60 + (st.sec || 0)), 0);
-
-    // Steps as single string, numbered, separated by " | "
-    const stepsText = stepsArr.map((st, idx) => {
-      const dur = formatTime((st.min || 0) * 60 + (st.sec || 0));
-      const tipPart = st.tip ? ` - ${st.tip}` : "";
-      return `${idx + 1}. ${st.name || ""} (${dur})${tipPart}`;
-    }).join(" | ");
-
-    const row = [
-      savedKey,
-      proc.processName || savedKey,
-      proc.processType || "",
-      proc.filmName || "",
-      proc.developerName || "",
-      proc.temperature || "",
-      proc.pushPull || "",
-      formatTime(totalSec),
-      (proc.notes || "").replace(/\r?\n/g, " | "),
-      stepsText
+  // CSV: improved columns and grouped steps cell
+  function exportCSV(){
+    const entries = Object.entries(processes);
+    if(!entries.length){ alert('No saved processes to export.'); return; }
+    const header = [
+      'Saved Key',
+      'Process Name',
+      'Type',
+      'Film/Paper',
+      'Developer',
+      'Temperature (°C)',
+      'Push/Pull',
+      'Total Time',
+      'Notes',
+      'Steps'
     ];
+    const rows = [header];
+    entries.forEach(([key,p])=>{
+      const proc = p || {};
+      const stepsArr = proc.steps || [];
+      const total = stepsArr.reduce((s,st)=>s + ((st.min||0)*60 + (st.sec||0)),0);
+      const stepsText = stepsArr.map((st,idx)=>{
+        const dur = formatTime((st.min||0)*60 + (st.sec||0));
+        const tip = st.tip ? ` - ${st.tip}` : '';
+        return `${idx+1}. ${st.name || ''} (${dur})${tip}`;
+      }).join(' | ');
+      const row = [
+        key,
+        proc.processName || key,
+        proc.processType || '',
+        proc.filmName || '',
+        proc.developerName || '',
+        proc.temperature || '',
+        proc.pushPull || '',
+        formatTime(total),
+        (proc.notes || '').replace(/\r?\n/g,' | '),
+        stepsText
+      ];
+      rows.push(row);
+    });
+    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const bom = '\uFEFF';
+    const blob = new Blob([bom + csv], {type:'text/csv;charset=utf-8;'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `darkroom-saved-processes-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+  }
 
-    rows.push(row);
+  // Print card
+  function printCard(){
+    if(!steps.length){ alert('Add steps first'); return; }
+    let html = '<!doctype html><html><head><meta charset="utf-8"><title>Darkroom Card</title><style>body{font-family:monospace;padding:20px}h1{font-size:18px} .step{margin:10px 0}</style></head><body>';
+    html += `<h1>${processName.value || currentProcessName || 'Process'}</h1>`;
+    html += `<div><strong>Film/Paper:</strong> ${filmName.value || '-'}<br><strong>Developer:</strong> ${developerName.value || '-'}<br><strong>Temp:</strong> ${temperature.value || '-'}°C</div>`;
+    html += '<h3>Steps</h3>';
+    steps.forEach((s,i) => {
+      html += `<div class="step"><strong>${i+1}. ${s.name || ''}</strong> — ${formatTime((s.min||0)*60 + (s.sec||0))}${s.tip ? `<div>${s.tip}</div>` : ''}</div>`;
+    });
+    html += '</body></html>';
+    const w = window.open();
+    w.document.write(html);
+    w.document.close();
+    setTimeout(()=>w.print(), 200);
+  }
+
+  // History (storage only, UI removed)
+  function addToHistory(name){
+    const now = new Date();
+    history.unshift(`${now.toLocaleDateString()} ${now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} - ${name}`);
+    if(history.length>200) history.length = 200;
+    localStorage.setItem('darkroomHistory', JSON.stringify(history));
+  }
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', e=>{
+    if(e.code === 'Space'){ e.preventDefault(); if(!isRunning) start(); else pause(); }
+    if(e.code === 'Escape') stopTimer();
   });
 
-  const csvContent = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
-  const bom = "\uFEFF";
-  const blob = new Blob([bom + csvContent], { type: "text/csv;charset=utf-8;" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `darkroom-saved-processes-${new Date().toISOString().split('T')[0]}.csv`;
-  a.click();
-}
+  // Prevent accidental scroll when running on touch devices
+  document.addEventListener('touchmove', e => { if(isRunning) e.preventDefault(); }, {passive:false});
 
-// Print card (keeps the print option)
-function printCard() {
-  if (steps.length === 0) { alert("Add steps first"); return; }
-  let content = `<!DOCTYPE html><html><head><title>Darkroom Card</title><style>body{font-family:monospace;margin:20px;line-height:1.8}h1{margin:10px 0;border-bottom:2px solid #000;padding-bottom:10px}.info{margin:10px 0;border:1px solid #000;padding:10px}.step{margin:8px 0;padding:8px;border-left:4px solid #000;padding-left:10px}.tip{font-size:0.9em;color:#666;margin-top:4px}</style></head><body>`;
-  content += `<h1>${processName.value || "Process"}</h1><div class="info"><strong>Process:</strong> ${processName.value}<br><strong>Film/Paper:</strong> ${filmName.value || "-"}<br><strong>Developer:</strong> ${developerName.value || "-"}<br><strong>Temperature:</strong> ${temperature.value || "-"}°C<br><strong>Push/Pull:</strong> ${pushPull.value}</div><h3>Steps:</h3>`;
-  steps.forEach((s,i) => {
-    const stepTime = formatTime((s.min||0)*60 + (s.sec||0));
-    content += `<div class="step"><strong>${i+1}. ${s.name}</strong> - ${stepTime}${s.tip ? `<div class="tip">${s.tip}</div>` : ""}</div>`;
-  });
-  content += `</body></html>`;
-  const win = window.open();
-  win.document.write(content);
-  win.document.close();
-  setTimeout(() => win.print(), 250);
-}
-
-// ===== History storage (UI removed) =====
-function addToHistory(processName) {
-  const now = new Date();
-  const dateStr = now.toLocaleDateString();
-  const timeStr = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  history.unshift(`${dateStr} ${timeStr} - ${processName}`);
-  if (history.length > 200) history.pop();
-  localStorage.setItem("darkroomHistory", JSON.stringify(history));
-}
-
-// ===== Keyboard & wake lock =====
-document.addEventListener("keydown", (e) => {
-  if (e.code === "Space") { e.preventDefault(); if (!isRunning) start(); else pause(); }
-  if (e.code === "Escape") stopTimer();
-});
-
-document.addEventListener("visibilitychange", async () => {
-  if (document.hidden && wakelock) { try { await wakelock.release(); } catch (e) { console.warn("WakeLock release failed", e); } wakelock = null; }
-  else if (!document.hidden && isRunning) { try { if ("wakeLock" in navigator && !wakelock) wakelock = await navigator.wakeLock.request("screen"); } catch (err) { console.log("Wake lock re-request failed:", err); wakelock = null; } }
-});
-
-document.addEventListener("touchmove", (e) => { if (isRunning) e.preventDefault(); }, { passive: false });
-
-// Start
-init();
+  // Start up
+  init();
 </script>
 </body>
 </html>
