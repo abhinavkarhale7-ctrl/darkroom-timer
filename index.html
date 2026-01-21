@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <title>Darkroom Process Timer</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Darkroom Timer" />
@@ -11,7 +11,7 @@
 <meta name="format-detection" content="telephone=no,email=no,address=no" />
 
 <style>
-  /* Mobile-first design tokens */
+  /* Design tokens (default dark) */
   :root{
     --bg: #0a0a0a;
     --panel: #0f0f0f;
@@ -25,13 +25,13 @@
     --text: #d0d0d0;
     --input-bg: #121212;
     --radius: 10px;
-    --gap: 10px;
-    --touch: 48px;
+    --gap: 8px;
+    --touch: 44px;
     --ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   }
 
-  /* Light theme variables */
-  body.theme-light {
+  /* Light theme overrides */
+  body.theme-light{
     --bg: #f6f7fb;
     --panel: #ffffff;
     --muted: #6b7280;
@@ -42,72 +42,96 @@
     --input-bg: #fbfbfd;
   }
 
-  /* Base */
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html,body{height:100%;margin:0;font-family:var(--ui);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
-  .app{max-width:420px;margin:6px auto;padding:12px}
+  /* Base & responsive scaling */
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html,body { height:100%; margin:0; font-family:var(--ui); background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+  body { display:flex; justify-content:center; padding:10px; }
 
-  /* Theme toggle top-right small */
-  .theme-toggle{position:fixed;right:10px;top:10px;width:36px;height:36px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);display:inline-flex;align-items:center;justify-content:center;font-size:16px;z-index:1000}
+  /* App container: mobile-first size; automatically centers on large screens and scales a bit for large viewports */
+  .app {
+    width: clamp(320px, 92vw, 420px);    /* mobile width up to 420px */
+    max-width: 420px;
+    background: transparent;
+    margin: 0 auto;
+  }
 
-  .panel{background:var(--panel);border-radius:12px;padding:12px;border:1px solid var(--border)}
-  h1{font-size:18px;text-align:center;margin:6px 0 10px}
-  label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+  /* Slight subtle up-scale on very large screens so app doesn't look too small */
+  @media (min-width:1200px){
+    .app { transform: scale(1.06); transform-origin: top center; }
+  }
 
-  input,select,textarea,button{font-size:14px;color:var(--text);background:var(--input-bg);border:1px solid var(--border);border-radius:10px;padding:9px 10px;outline:none}
-  textarea{min-height:76px;resize:vertical}
-  input::placeholder,textarea::placeholder{color:#8c8c8c}
+  /* Panels & typography */
+  .panel { background:var(--panel); border-radius:var(--radius); padding:12px; border:1px solid var(--border); box-shadow: 0 8px 20px rgba(0,0,0,0.25); }
+  h1 { text-align:center; margin:6px 0 10px 0; font-size:18px; }
+  label { display:block; font-size:12px; color:var(--muted); margin-bottom:6px; }
 
-  /* Steps: smaller compact layout */
-  #steps{display:flex;flex-direction:column;gap:8px;margin-top:6px}
-  .step{
+  input, select, textarea, button {
+    font-size:13px;
+    color:var(--text);
+    background:var(--input-bg);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:8px 10px;
+    outline:none;
+  }
+  textarea { min-height:72px; resize:vertical; }
+  input::placeholder, textarea::placeholder { color:#8c8c8c; }
+
+  /* Compact steps row (reduced height but readable) */
+  #steps { display:flex; flex-direction:column; gap:6px; margin-top:6px; }
+  .step {
     display:grid;
     gap:6px;
-    grid-template-columns: 1fr 64px 56px 1fr 28px; /* name / min / sec / tip / remove */
+    grid-template-columns: 1fr 60px 52px 1fr 28px; /* name / min / sec / tip / remove */
     align-items:center;
+    padding:4px 2px;
   }
-  .step input{padding:8px 10px;font-size:13px}
-  .step .min, .step .sec{width:100%;box-sizing:border-box}
-  .step .tip{font-size:13px}
-  .step .remove{width:28px;height:28px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;padding:0;font-size:13px}
 
-  /* On very narrow phones, stack more compactly */
+  /* smaller inputs in steps */
+  .step input { padding:6px 8px; font-size:12px; line-height:1.1; }
+  .step .min, .step .sec { width:100%; box-sizing:border-box; text-align:center; }
+  .step .tip { font-size:12px; }
+  .step .remove { width:24px; height:24px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; padding:0; }
+
+  /* On very narrow phones stack more compactly */
   @media (max-width:360px){
-    .step{grid-template-columns:1fr 1fr;grid-template-rows:auto auto}
-    .step .name{grid-column:1 / -1}
-    .step .min{grid-column:1 / 2}
-    .step .sec{grid-column:2 / 3}
-    .step .tip{grid-column:1 / -1}
-    .step .remove{grid-column:2 / 3;justify-self:end}
+    .step { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; }
+    .step .name { grid-column: 1 / -1; }
+    .step .min { grid-column: 1 / 2; }
+    .step .sec { grid-column: 2 / 3; }
+    .step .tip { grid-column: 1 / -1; }
+    .step .remove { grid-column: 2 / 3; justify-self:end; }
   }
 
-  /* Row helpers for neat alignment */
-  .row{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap}
-  .col{flex:1 1 auto;min-width:0}
-  .col-fixed{flex:0 0 auto;width:96px;min-width:84px}
+  /* Row helpers */
+  .row { display:flex; gap:8px; align-items:flex-start; flex-wrap:wrap; }
+  .col { flex:1 1 auto; min-width:0; }
+  .col-fixed { flex:0 0 auto; width:92px; max-width:40%; }
 
-  /* Timer & controls */
-  .timer{text-align:center;font-weight:700;font-variant-numeric:tabular-nums;font-size:40px;margin:10px 0;letter-spacing:-1px}
-  .timer.running{color:var(--success)}
-  .timer.paused{color:var(--warning)}
-  .timer.done{color:var(--danger)}
-  #progress{height:10px;background:#131313;border-radius:10px;overflow:hidden;border:1px solid var(--border)}
-  #bar{height:100%;width:0%;background:var(--accent);transition:width .08s linear}
+  /* Timer & progress */
+  .timer { text-align:center; font-weight:700; font-variant-numeric:tabular-nums; font-size:38px; margin:8px 0; letter-spacing:-1px; }
+  @media (min-width:420px) { .timer { font-size:44px; } }
+  .timer.running { color:var(--success); }
+  .timer.paused { color:var(--warning); }
+  .timer.done { color:var(--danger); }
 
-  .current{text-align:center;padding:8px;border-radius:8px;border:1px solid rgba(157,132,183,0.06);margin-bottom:8px;font-size:13px}
-  .muted{color:var(--muted);font-size:13px}
+  #progress { height:10px; background:#131313; border-radius:8px; overflow:hidden; border:1px solid var(--border); }
+  #bar { height:100%; width:0%; background:var(--accent); transition: width .08s linear; }
 
-  /* Controls: identical square-ish touch targets */
-  .controls-row{display:flex;gap:8px;margin-top:10px}
-  .control-btn{flex:1 1 0;min-height:44px;border-radius:10px;font-weight:700;background:var(--accent);color:#000;display:inline-flex;align-items:center;justify-content:center}
-  .control-btn.secondary{background:transparent;border:1px solid var(--border);color:var(--text)}
+  .current { text-align:center; padding:6px; border-radius:8px; border:1px solid rgba(157,132,183,0.06); margin-bottom:8px; font-size:13px; }
+  .muted { color:var(--muted); font-size:13px; }
 
-  /* Action buttons (two-per-row on small) */
-  .action-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+  /* Controls: identical touch targets, compact */
+  .controls-row { display:flex; gap:8px; margin-top:10px; }
+  .control-btn { flex:1 1 0; min-height:40px; border-radius:10px; font-weight:700; background:var(--accent); color:#000; display:inline-flex; align-items:center; justify-content:center; padding:8px 10px; font-size:13px; }
+  .control-btn.secondary { background:transparent; border:1px solid var(--border); color:var(--text); }
 
-  /* Sidebar reduced - mobile only app so show it stacked below main */
-  .sidebar{margin-top:12px}
-  select#savedProcesses{width:100%}
+  /* Action buttons */
+  .action-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+
+  /* Theme toggle small top-right within mobile viewport */
+  .theme-toggle { position:fixed; right:10px; top:10px; width:36px; height:36px; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--text); display:inline-flex; align-items:center; justify-content:center; font-size:16px; z-index:1000; }
+
 </style>
 </head>
 <body>
@@ -194,8 +218,7 @@
       </div>
     </div>
 
-    <!-- Sidebar content moved below main for mobile-only -->
-    <div class="panel sidebar">
+    <div class="panel sidebar" style="margin-top:12px;">
       <label>Saved processes</label>
       <select id="savedProcesses" onchange="loadProcess()"></select>
 
@@ -205,7 +228,7 @@
       </div>
 
       <div style="margin-top:12px;color:var(--muted);font-size:13px;">
-        Tip: tap a saved process to load. CSV export groups steps into a single column for easy import.
+        Tip: tap a saved process to load it. CSV export groups steps into a single column.
       </div>
     </div>
   </div>
@@ -267,7 +290,7 @@
     themeToggle.textContent = isLight ? '☀️' : '🌙';
   }
 
-  // Init
+  // Initialization
   function init(){
     applySavedTheme();
     addStep("Developer",8,0,"Agitate every 30 sec");
@@ -298,7 +321,7 @@
     stopBtn.disabled = !isRunning && !isPaused;
   }
 
-  // Steps
+  // Steps UI
   function addStep(name="",min=0,sec=0,tip=""){
     steps.push({name,min,sec,tip});
     renderSteps();
@@ -372,9 +395,9 @@
     totalTimeEl.innerText = `Total: ${formatTime(total)}`;
   }
 
-  function updateUpcomingSteps(){ /* kept minimal for mobile */ }
+  function updateUpcomingSteps(){ /* minimal on mobile */ }
 
-  // Timer
+  // Timer control
   async function start(){
     if(!steps.length){ alert("Add at least one step first"); return; }
     isRunning = true; isPaused = false; timerIndex = 0; pausedSeconds = 0;
@@ -444,10 +467,10 @@
 
   // Audio/haptics
   function vibrate(){ if(navigator.vibrate) navigator.vibrate([50,30,50]); }
-  function playSound(){ if(!audioEnabled) return; try{ const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination); osc.frequency.value=880; osc.type='sine'; gain.gain.setValueAtTime(0.3,ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+0.3); osc.start(ctx.currentTime); osc.stop(ctx.currentTime+0.3);}catch(e){} }
+  function playSound(){ if(!audioEnabled) return; try{ const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination); osc.frequency.value=880; osc.type='sine'; gain.gain.setValueAtTime(0.3,ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+0.3); osc.start(ctx.currentTime); osc.stop(ctx.currentTime+0.3) }catch(e){} }
   function toggleAudio(){ audioEnabled = !audioEnabled; localStorage.setItem('darkroomAudio', audioEnabled ? 'true' : 'false'); document.getElementById('audioToggle').style.opacity = audioEnabled ? '1' : '0.5'; }
 
-  // Persistence & process UI
+  // Persistence & UI (unchanged)
   function updateProcessNames(selected=null){
     const type = processType.value;
     const list = processOptions[type] || [];
@@ -512,22 +535,14 @@
     alert('Deleted');
   }
 
-  // Import/Export and CSV (unchanged behavior)
+  // Import/Export & CSV (unchanged behavior)
   function exportProcess(){ const data = JSON.stringify(processes, null, 2); const blob = new Blob([data], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `darkroom-processes-${new Date().toISOString().split('T')[0]}.json`; a.click(); }
   function importProcess(){ fileInput.click(); }
   fileInput.onchange = e => { const f = e.target.files[0]; if(!f) return; const r = new FileReader(); r.onload = () => { try { const imported = JSON.parse(r.result); processes = {...processes, ...imported}; localStorage.setItem('darkroomProcesses', JSON.stringify(processes)); refreshProcessList(); alert('Imported'); } catch(err){ alert('Invalid JSON file'); } }; r.readAsText(f); };
 
-  function exportCSV(){
-    const entries = Object.entries(processes);
-    if(!entries.length){ alert('No saved processes to export.'); return; }
-    const header = ['Saved Key','Process Name','Type','Film/Paper','Developer','Temperature (°C)','Push/Pull','Total Time','Notes','Steps'];
-    const rows=[header];
-    entries.forEach(([key,p])=>{ const proc = p||{}; const stepsArr = proc.steps || []; const total = stepsArr.reduce((s,st)=>s+((st.min||0)*60+(st.sec||0)),0); const stepsText = stepsArr.map((st,idx)=>{ const dur = formatTime((st.min||0)*60+(st.sec||0)); const tip = st.tip ? ` - ${st.tip}` : ''; return `${idx+1}. ${st.name || ''} (${dur})${tip}`; }).join(' | '); const row=[key,proc.processName||key,proc.processType||'',proc.filmName||'',proc.developerName||'',proc.temperature||'',proc.pushPull||'',formatTime(total),(proc.notes||'').replace(/\r?\n/g,' | '),stepsText]; rows.push(row); });
-    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
-    const bom = '\uFEFF'; const blob = new Blob([bom + csv], {type:'text/csv;charset=utf-8;'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `darkroom-saved-processes-${new Date().toISOString().split('T')[0]}.csv`; a.click();
-  }
+  function exportCSV(){ const entries = Object.entries(processes); if(!entries.length){ alert('No saved processes to export.'); return; } const header = ['Saved Key','Process Name','Type','Film/Paper','Developer','Temperature (°C)','Push/Pull','Total Time','Notes','Steps']; const rows=[header]; entries.forEach(([key,p])=>{ const proc = p||{}; const stepsArr = proc.steps || []; const total = stepsArr.reduce((s,st)=>s + ((st.min||0)*60 + (st.sec||0)),0); const stepsText = stepsArr.map((st,idx)=>{ const dur = formatTime((st.min||0)*60 + (st.sec||0)); const tip = st.tip ? ` - ${st.tip}` : ''; return `${idx+1}. ${st.name || ''} (${dur})${tip}`; }).join(' | '); const row=[key,proc.processName||key,proc.processType||'',proc.filmName||'',proc.developerName||'',proc.temperature||'',proc.pushPull||'',formatTime(total),(proc.notes||'').replace(/\r?\n/g,' | '),stepsText]; rows.push(row); }); const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n'); const bom = '\uFEFF'; const blob = new Blob([bom + csv], {type:'text/csv;charset=utf-8;'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `darkroom-saved-processes-${new Date().toISOString().split('T')[0]}.csv`; a.click(); }
 
-  // Print card
+  // Print
   function printCard(){ if(!steps.length){ alert('Add steps first'); return; } let html = '<!doctype html><html><head><meta charset="utf-8"><title>Darkroom Card</title><style>body{font-family:monospace;padding:20px}h1{font-size:18px}.step{margin:8px 0}</style></head><body>'; html += `<h1>${processName.value || currentProcessName || 'Process'}</h1>`; html += `<div><strong>Film/Paper:</strong> ${filmName.value || '-'}<br><strong>Developer:</strong> ${developerName.value || '-'}<br><strong>Temp:</strong> ${temperature.value || '-'}°C</div>`; html += '<h3>Steps</h3>'; steps.forEach((s,i)=>{ html += `<div class="step"><strong>${i+1}. ${s.name || ''}</strong> — ${formatTime((s.min||0)*60 + (s.sec||0))}${s.tip ? `<div>${s.tip}</div>` : ''}</div>`; }); html += '</body></html>'; const w = window.open(); w.document.write(html); w.document.close(); setTimeout(()=>w.print(),200); }
 
   // History storage only
