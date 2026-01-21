@@ -11,7 +11,7 @@
 <meta name="format-detection" content="telephone=no,email=no,address=no" />
 
 <style>
-  /* Design tokens */
+  /* Design tokens (dark by default) */
   :root{
     --bg: #0a0a0a;
     --panel: #0f0f0f;
@@ -26,16 +26,50 @@
     --input-bg: #121212;
     --radius: 8px;
     --gap: 12px;
-    --touch: 48px;
+    --touch: 52px;
     --shadow: 0 6px 18px rgba(0,0,0,0.6);
-    --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Helvetica Neue", monospace;
     --ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  /* Light theme overrides */
+  body.theme-light {
+    --bg: #f6f7fb;
+    --panel: #ffffff;
+    --muted: #6b7280;
+    --accent: #6a5aa8;
+    --accent-strong: #4f3f86;
+    --success: #16a34a;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --border: #e6e6e9;
+    --text: #0b0b0b;
+    --input-bg: #fbfbfd;
+    --shadow: 0 8px 20px rgba(15,15,20,0.04);
   }
 
   /* Reset & base */
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html,body { height:100%; margin:0; font-family:var(--ui); background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
-  .app { max-width:1100px; margin:22px auto; padding:18px; }
+  .app { max-width:1100px; margin:22px auto; padding:18px; position:relative; }
+
+  /* Theme toggle top-right */
+  .theme-toggle {
+    position:absolute;
+    top:14px;
+    right:14px;
+    width:36px;
+    height:36px;
+    border-radius:10px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    background:transparent;
+    border:1px solid var(--border);
+    color:var(--text);
+    font-size:16px;
+  }
+  .theme-toggle:active { transform:translateY(1px); }
 
   /* Layout */
   .app-grid { display:grid; gap:24px; grid-template-columns: 1fr; }
@@ -45,23 +79,19 @@
 
   /* Panels */
   .panel { background:var(--panel); border-radius:var(--radius); padding:14px; border:1px solid var(--border); box-shadow:var(--shadow); }
-  .panel + .panel { margin-top:var(--gap); }
-
   label { display:block; font-size:12px; color:var(--muted); margin-bottom:6px; }
 
   input, select, textarea, button {
     font-size:14px;
     color:var(--text);
     background:var(--input-bg);
-    border:1px solid #2e2e2e;
+    border:1px solid var(--border);
     border-radius:8px;
     padding:10px 12px;
     outline:none;
   }
-
   textarea { min-height:80px; resize:vertical; }
-
-  input::placeholder, textarea::placeholder { color:#7b7b7b; }
+  input::placeholder, textarea::placeholder { color:#8c8c8c; }
 
   /* Buttons */
   .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; border:none; border-radius:8px; padding:10px 14px; background:var(--accent); color:#000; min-height:var(--touch); transition:transform .08s ease, box-shadow .08s; }
@@ -69,27 +99,25 @@
   .btn.secondary { background:transparent; color:var(--accent); border:1px solid var(--accent); min-height:44px; }
   .btn.ghost { background:transparent; color:var(--text); border:1px solid var(--border); }
 
-  /* Controls row: primary start button larger */
+  /* Controls row: all control buttons identical; comfortable touch size */
   .controls-row { display:flex; gap:10px; align-items:center; margin-top:12px; }
-  .controls-row .start { flex:2 1 0; min-width:120px; }
-  .controls-row .small { flex:1 1 0; min-width:72px; }
+  .control-btn { flex:1 1 0; min-width:72px; min-height:var(--touch); border-radius:10px; font-weight:600; }
+  .control-btn.icon { padding:0 12px; display:inline-flex; align-items:center; justify-content:center; font-size:18px; }
 
-  /* Action row: two per row on narrow screens, single row on wide */
+  /* Action row */
   .action-row { display:grid; gap:10px; grid-template-columns: repeat(2, 1fr); margin-top:12px; }
   @media (min-width:640px) { .action-row { grid-auto-flow:column; grid-auto-columns: 1fr; grid-template-columns: none; } }
 
-  /* Steps list layout */
+  /* Steps list */
   #steps { display:flex; flex-direction:column; gap:8px; margin-top:6px; }
   .step {
     display:grid;
     gap:8px;
-    grid-template-columns: 1fr 96px 64px 1fr 40px; /* name / min / sec / tip / remove */
+    grid-template-columns: 1fr 84px 64px 1fr 36px; /* name / min / sec / tip / remove */
     align-items:center;
   }
-  .step .name { padding:10px 12px; }
-  .step .min, .step .sec { padding:8px 10px; width:100%; }
-  .step .tip { padding:10px 12px; }
-  .step .remove { width:36px; height:36px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; }
+  .step input { padding:9px 10px; }
+  .step .remove { width:28px; height:28px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; font-size:13px; }
 
   /* Responsive step stacking for small screens */
   @media (max-width:720px){
@@ -108,36 +136,26 @@
   .timer.paused { color:var(--warning); }
   .timer.done { color:var(--danger); }
 
-  #progress { height:12px; background:#131313; border-radius:8px; overflow:hidden; border:1px solid var(--border); }
+  #progress { height:12px; background:#131313; border-radius:8px; overflow:hidden; border:1px solid var(--border); margin-bottom:12px; }
   #bar { height:100%; width:0%; background:var(--accent); transition: width .08s linear; }
 
-  .current { text-align:center; padding:8px; border-radius:8px; border:1px solid rgba(157,132,183,0.12); margin-bottom:8px; font-size:13px; }
-
-  /* Sidebar items */
-  .sidebar-actions { display:flex; gap:10px; margin-top:8px; flex-wrap:wrap; }
-  .sidebar-actions > * { flex:1 1 auto; }
-
-  /* Small helpers */
+  .current { text-align:center; padding:8px; border-radius:8px; border:1px solid rgba(157,132,183,0.08); margin-bottom:8px; font-size:13px; }
   .muted { color:var(--muted); font-size:13px; }
 
-  /* Accessibility focus */
+  /* Sidebar items */
+  .sidebar-actions { display:flex; gap:10px; margin-top:10px; flex-wrap:wrap; }
+  .sidebar-actions > * { flex:1 1 auto; }
+
+  /* Focus */
   input:focus, select:focus, textarea:focus, button:focus { box-shadow:0 0 0 4px rgba(157,132,183,0.12); border-color:var(--accent-strong); }
 
-  /* Make selects readable on desktop */
-  select { -webkit-appearance:none; appearance:none; background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: calc(100% - 18px) calc(1em + 2px), calc(100% - 13px) calc(1em + 2px); background-size: 6px 6px, 6px 6px; background-repeat: no-repeat; padding-right:36px; }
-
-  /* Ensure savedProcesses shows long names */
-  #savedProcesses { text-overflow:ellipsis; white-space:nowrap; overflow:hidden; }
-
-  /* Reduce visual noise on very small screens */
-  @media (max-width:360px){
-    .app { padding:10px; margin:10px auto; }
-    .controls-row .start { min-width:100px; }
-  }
+  /* Small screens */
+  @media (max-width:360px){ .app { padding:10px; margin:10px auto; } }
 </style>
 </head>
 <body>
   <div class="app">
+    <button id="themeToggle" class="theme-toggle" title="Toggle light/dark" onclick="toggleTheme()">🌙</button>
     <h1>Darkroom Process Timer</h1>
 
     <div class="app-grid">
@@ -164,7 +182,7 @@
           </div>
         </div>
 
-        <div style="display:flex;gap:12px;">
+        <div style="display:flex;gap:12px;margin-top:8px;">
           <div style="flex:1">
             <label>Developer</label>
             <input id="developerName" placeholder="e.g. D-76" />
@@ -182,7 +200,7 @@
           </div>
         </div>
 
-        <label>Variation / Notes</label>
+        <label style="margin-top:8px">Variation / Notes</label>
         <textarea id="notes" placeholder="Add variations or notes"></textarea>
 
         <hr style="border:none;border-top:1px solid var(--border);margin:12px 0;">
@@ -196,7 +214,7 @@
 
         <hr style="border:none;border-top:1px solid var(--border);margin:12px 0;">
 
-        <div class="info-box muted" id="totalTime">Total: 00:00</div>
+        <div class="muted" id="totalTime">Total: 00:00</div>
         <div class="current" id="currentStep">Ready</div>
         <div style="text-align:center;font-size:12px;color:var(--muted);margin-bottom:6px;">
           <span id="stepCounter">-</span>
@@ -205,11 +223,12 @@
         <div class="timer" id="timer">00:00</div>
         <div id="progress"><div id="bar"></div></div>
 
+        <!-- Controls: identical sized buttons for Start, Pause, Stop, Sound -->
         <div class="controls-row">
-          <button id="startBtn" class="btn start" onclick="start()">Start</button>
-          <button id="pauseBtn" class="btn secondary small" onclick="pause()">Pause</button>
-          <button id="stopBtn" class="btn secondary small" onclick="stopTimer()">Stop</button>
-          <button id="audioToggle" class="btn ghost small" onclick="toggleAudio()">🔊</button>
+          <button id="startBtn" class="btn control-btn" onclick="start()">Start</button>
+          <button id="pauseBtn" class="btn control-btn" onclick="pause()">Pause</button>
+          <button id="stopBtn" class="btn control-btn" onclick="stopTimer()">Stop</button>
+          <button id="audioToggle" class="btn control-btn icon" onclick="toggleAudio()" title="Toggle sound">🔊</button>
         </div>
 
         <div class="action-row" role="group" aria-label="File actions">
@@ -231,7 +250,7 @@
         </div>
 
         <div style="margin-top:16px;color:var(--muted);font-size:13px;">
-          Tip: Tap a saved process to load it. Use the CSV export to share/process on desktop apps.
+          Tip: Tap a saved process to load it. Use CSV export to open in Excel/Sheets.
         </div>
       </div>
     </div>
@@ -258,6 +277,7 @@
   const fileInput = document.getElementById("fileInput");
   const totalTimeEl = document.getElementById("totalTime");
   const stepCounter = document.getElementById("stepCounter");
+  const themeToggle = document.getElementById("themeToggle");
 
   // State
   let currentProcessName = null;
@@ -281,8 +301,21 @@
     "Alternative Printing": ["Cyanotype", "Salt Printing", "Carbon Transfer", "Vandyke Brown", "Albumen", "Gum Bichromate", "Platinum/Palladium", "Bromoil"]
   };
 
+  // Theme handling
+  function applySavedTheme(){
+    const t = localStorage.getItem('darkroomTheme') || 'dark';
+    document.body.classList.toggle('theme-light', t === 'light');
+    themeToggle.textContent = t === 'light' ? '☀️' : '🌙';
+  }
+  function toggleTheme(){
+    const isLight = document.body.classList.toggle('theme-light');
+    localStorage.setItem('darkroomTheme', isLight ? 'light' : 'dark');
+    themeToggle.textContent = isLight ? '☀️' : '🌙';
+  }
+
   // Initialization
   function init(){
+    applySavedTheme();
     addStep("Developer",8,0,"Agitate every 30 sec");
     addStep("Stop",0,30,"");
     addStep("Fix",5,0,"");
@@ -319,6 +352,7 @@
   }
 
   function removeStep(i){
+    if(isRunning) return;
     steps.splice(i,1);
     renderSteps();
     updateTotalTime();
@@ -367,7 +401,7 @@
       remove.className = "remove btn secondary";
       remove.title = "Remove step";
       remove.innerText = "✕";
-      remove.onclick = () => { if(!isRunning) removeStep(i); };
+      remove.onclick = () => { removeStep(i); };
 
       row.appendChild(name);
       row.appendChild(min);
@@ -385,32 +419,14 @@
   }
 
   function updateUpcomingSteps(){
-    const upcoming = document.getElementById("upcomingSteps");
-    if(!upcoming) return;
-    upcoming.innerHTML = "";
-    if(timerIndex < steps.length && isRunning){
-      const current = steps[timerIndex];
-      const tip = current.tip || "";
-      const currentTime = formatTime((current.min||0)*60+(current.sec||0));
-      upcoming.innerHTML = `<div class="muted">▶ ${current.name} (${currentTime}) ${tip ? ' — ' + tip : ''}</div>`;
-      for(let i=timerIndex+1;i<Math.min(timerIndex+4, steps.length); i++){
-        const s = steps[i];
-        upcoming.innerHTML += `<div class="muted">${s.name} (${formatTime((s.min||0)*60+(s.sec||0))})</div>`;
-      }
-    } else {
-      // show first few
-      for(let i=0;i<Math.min(3,steps.length); i++){
-        const s = steps[i];
-        upcoming.innerHTML += `<div class="muted">${s.name} (${formatTime((s.min||0)*60+(s.sec||0))})</div>`;
-      }
-    }
+    // kept lightweight — no intrusive rendering here
   }
 
   // Timer control
   async function start(){
     if(!steps.length){ alert("Add at least one step first"); return; }
     isRunning = true; isPaused = false; timerIndex = 0; pausedSeconds = 0;
-    updateUIState(); updateUpcomingSteps();
+    updateUIState();
     try { if("wakeLock" in navigator) wakelock = await navigator.wakeLock.request("screen"); } catch(e){ wakelock = null; }
     nextStep();
   }
@@ -421,12 +437,10 @@
     const s = steps[timerIndex];
     remainingSeconds = (s.min||0)*60 + (s.sec||0);
     currentStep.innerText = s.name || "Step";
-    currentStep.className = "current";
     stepCounter.innerText = `${timerIndex+1}/${steps.length}`;
-    updateUpcomingSteps();
     bar.style.width = "0%";
     tick();
-    timerInterval = setInterval(tick, 100);
+    timerInterval = setInterval(tick,100);
   }
 
   function tick(){
@@ -455,11 +469,9 @@
       clearInterval(timerInterval);
       isPaused = true;
       pauseStartTime = Date.now();
-      timer.classList.add('paused');
     } else {
       if(pauseStartTime) pausedSeconds += Math.floor((Date.now() - pauseStartTime)/1000);
       isPaused = false;
-      timer.classList.remove('paused');
       timerInterval = setInterval(tick,100);
     }
     updateUIState();
@@ -471,9 +483,7 @@
     timer.className = 'timer';
     timer.innerText = "00:00";
     currentStep.innerText = "Ready";
-    currentStep.className = 'current';
     stepCounter.innerText = '-';
-    document.getElementById("upcomingSteps").innerHTML = '';
     pausedSeconds = 0;
     bar.style.width = '0%';
     if(wakelock){ wakelock.release().catch(()=>{}); wakelock = null; }
@@ -492,9 +502,7 @@
     addToHistory(currentProcessName || 'Quick Process');
   }
 
-  function updatePauseTime(){
-    // placeholder if we want a paused display later (kept for compatibility)
-  }
+  function updatePauseTime(){ /* placeholder */ }
 
   // Audio & haptics
   function vibrate(){ if(navigator.vibrate) navigator.vibrate([50,30,50]); }
@@ -511,7 +519,6 @@
       osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.3);
     } catch(e){ /* ignore */ }
   }
-
   function toggleAudio(){ audioEnabled = !audioEnabled; localStorage.setItem('darkroomAudio', audioEnabled ? 'true' : 'false'); document.getElementById('audioToggle').style.opacity = audioEnabled ? '1' : '0.5'; }
 
   // Process persistence & UI
@@ -677,7 +684,7 @@
     setTimeout(()=>w.print(), 200);
   }
 
-  // History (storage only, UI removed)
+  // History (storage only)
   function addToHistory(name){
     const now = new Date();
     history.unshift(`${now.toLocaleDateString()} ${now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} - ${name}`);
@@ -685,17 +692,16 @@
     localStorage.setItem('darkroomHistory', JSON.stringify(history));
   }
 
-  // Keyboard shortcuts
+  // Keyboard & misc
   document.addEventListener('keydown', e=>{
     if(e.code === 'Space'){ e.preventDefault(); if(!isRunning) start(); else pause(); }
     if(e.code === 'Escape') stopTimer();
   });
-
-  // Prevent accidental scroll when running on touch devices
   document.addEventListener('touchmove', e => { if(isRunning) e.preventDefault(); }, {passive:false});
 
-  // Start up
-  init();
+  // load saved theme and init
+  (function(){ applySavedTheme(); init(); })();
+  function applySavedTheme(){ const t = localStorage.getItem('darkroomTheme') || 'dark'; document.body.classList.toggle('theme-light', t === 'light'); themeToggle.textContent = t === 'light' ? '☀️' : '🌙'; }
 </script>
 </body>
 </html>
