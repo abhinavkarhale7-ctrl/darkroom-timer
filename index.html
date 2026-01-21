@@ -186,7 +186,7 @@ const notes = document.getElementById("notes");
 const savedProcesses = document.getElementById("savedProcesses");
 const fileInput = document.getElementById("fileInput");
   
-  let currentProcessName = null;
+let currentProcessName = null;
 let steps = [];
 let timerIndex = 0;
 let remaining = 0;
@@ -280,7 +280,7 @@ function renderSteps() {
     box.appendChild(div);
   });
 }
-
+  
 function start() {
   if (!steps.length) return;
   timer.className = "timer running";
@@ -379,6 +379,7 @@ function saveProcess() {
   currentProcessName = name;
   refreshProcessList();
 }
+  
 function refreshProcessList() {
   const sel = document.getElementById("savedProcesses");
   sel.innerHTML = "<option value=''>Load process</option>";
@@ -495,6 +496,7 @@ addStep("Wash",10,0);
 refreshProcessList();
 updateProcessNames();
 renderSteps();
+}
 </script>
 </body>
 </html>
