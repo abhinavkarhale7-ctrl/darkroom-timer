@@ -351,113 +351,11 @@ body.theme-minimal .template-btn {
 <div class="app">
 <h1>Darkroom Process Timer</h1>
 
-<!-- Theme Selector -->
-<div class="theme-section">
-  <span class="theme-label">🎨 UI Theme:</span>
-  <div class="theme-options">
-    <button class="theme-btn active" onclick="setTheme('classic')">Classic</button>
-    <button class="theme-btn" onclick="setTheme('modern')">Modern</button>
-    <button class="theme-btn" onclick="setTheme('minimal')">Minimal</button>
-    <button class="theme-btn" onclick="setTheme('darkpro')">Dark Pro</button>
-  </div>
-</div>
 
 <label>Process type</label>
 <select id="processType" onchange="updateProcessNames()">
   <option>Film</option>
   <option>Printing</option>
-  <option>Alternative Printing</option>
-</select>
-
-<label>Process name</label>
-<select id="processName"></select>
-
-<label>Film / Paper</label>
-<input id="filmName" placeholder="e.g. Kodak Portra 400">
-
-<label>Developer</label>
-<input id="developerName" placeholder="e.g. D-76">
-
-<label>Temperature(°C)</label>
-<input id="temperature" type="number" placeholder="20">
-
-<label>Push / Pull</label>
-<select id="pushPull">
-  <option>Pull -2</option>
-  <option>Pull -1</option>
-  <option selected>Normal</option>
-  <option>Push +1</option>
-  <option>Push +2</option>
-  <option>Push +3</option>
-</select>
-
-<label>Variation / Notes</label>
-<textarea id="notes"></textarea>
-
-<hr>
-
-<div id="steps"></div>
-<button class="secondary" onclick="addStep()">+ Add Step</button>
-
-<hr>
-
-<div class="info-box" id="totalTime"></div>
-<div class="upcoming" id="upcomingSteps"></div>
-<div class="info-box" id="pauseTime" style="display:none;"></div>
-
-<div class="current" id="currentStep">Ready</div>
-<div style="text-align:center;font-size:12px;color:#666;margin-bottom:6px;">
-  <span class="step-counter" id="stepCounter"></span>
-</div>
-<div class="timer" id="timer">00:00</div>
-<div id="progress" style="height:14px;background:#333;border-radius:4px;overflow:hidden;border:1px solid #555;">
-  <div id="bar" style="height:100%;width:0%;background:#9d84b7;"></div>
-</div>
-
-<div class="row">
-  <button id="startBtn" onclick="start()">Start</button>
-  <button id="pauseBtn" class="secondary" onclick="pause()">Pause</button>
-  <button id="stopBtn" class="secondary" onclick="stopTimer()">Stop</button>
-  <button class="audio-toggle secondary" id="audioToggle" onclick="toggleAudio()" title="Toggle sound">🔊</button>
-</div>
-
-<hr>
-
-<button onclick="saveProcess()">Save Process</button>
-<select id="savedProcesses" onchange="loadProcess()"></select>
-
-<div style="margin-bottom: 6px;">
-  <button class="secondary" style="margin-bottom: 3px; font-size: 11px;" onclick="toggleTemplates()">⭐ Quick Templates</button>
-  <div id="templatesBox" style="display:none;background:#1a1a1a;border:1px solid #9d84b7;padding:6px;border-radius:4px;margin-bottom:6px;">
-    <button class="template-btn" onclick="loadTemplate('C-41 Film')">C-41 Film</button>
-    <button class="template-btn" onclick="loadTemplate('E-6 Film')">E-6 Film</button>
-    <button class="template-btn" onclick="loadTemplate('B&W Film')">B&W Film</button>
-    <button class="template-btn" onclick="loadTemplate('RA-4 Print')">RA-4 Print</button>
-    <button class="template-btn" onclick="loadTemplate('B&W Print')">B&W Print</button>
-    <button class="template-btn" onclick="loadTemplate('Cyanotype')">Cyanotype</button>
-    <button class="template-btn" onclick="loadTemplate('Platinum/Palladium')">Platinum</button>
-  </div>
-</div>
-
-<div class="history-panel" id="historyPanel"></div>
-
-<div class="row">
-  <button class="secondary" onclick="deleteProcess()">Delete</button>
-  <button class="secondary" onclick="exportCSV()">📊 CSV</button>
-  <button class="secondary" onclick="exportPDF()">📄 PDF</button>
-  <button class="secondary" onclick="exportProcess()">JSON</button>
-  <button class="secondary" onclick="importProcess()">Import</button>
-  <button class="secondary" onclick="printCard()">Print</button>
-</div>
-
-<input type="file" id="fileInput" hidden>
-
-</div>
-
-<script>
-// ===== DOM Elements =====
-const timer = document.getElementById("timer");
-const currentStep = document.getElementById("currentStep");
 const startBtn = document.getElementById("startBtn");
 const pauseBtn = document.getElementById("pauseBtn");
 const stopBtn = document.getElementById("stopBtn");
@@ -543,27 +441,6 @@ const templates = {
   ]}
 };
 
-// ===== Theme Management =====
-function setTheme(theme) {
-  document.body.className = theme ? `theme-${theme}` : '';
-  localStorage.setItem("darkroomTheme", theme);
-  
-  // Update active button
-  document.querySelectorAll('.theme-btn').forEach(btn => {
-    btn.classList.remove('active');
-  });
-  event.target.classList.add('active');
-}
-
-function loadTheme() {
-  const theme = localStorage.getItem("darkroomTheme") || 'classic';
-  document.body.className = theme ? `theme-${theme}` : '';
-  document.querySelectorAll('.theme-btn').forEach(btn => {
-    if (btn.textContent.toLowerCase().replace(' ', '') === theme) {
-      btn.classList.add('active');
-    }
-  });
-}
 
 // ===== Initialization =====
 function init() {
@@ -1298,7 +1175,6 @@ document.addEventListener("touchmove", (e) => {
 }, { passive: false });
 
 // Start application
-loadTheme();
 init();
 </script>
 </body>
