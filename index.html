@@ -170,7 +170,23 @@ hr {
 </div>
 
 <script>
-  let currentProcessName + null;
+  const timer = document.getElementById("timer");
+const currentStep = document.getElementById("currentStep");
+const startBtn = document.getElementById("startBtn");
+const pauseBtn = document.getElementById("pauseBtn");
+const stopBtn = document.getElementById("stopBtn");
+const bar = document.getElementById("bar");
+const processType = document.getElementById("processType");
+const processName = document.getElementById("processName");
+const filmName = document.getElementById("filmName");
+const developerName = document.getElementById("developerName");
+const temperature = document.getElementById("temperature");
+const pushPull = document.getElementById("pushPull");
+const notes = document.getElementById("notes");
+const savedProcesses = document.getElementById("savedProcesses");
+const fileInput = document.getElementById("fileInput");
+  
+  let currentProcessName = null;
 let steps = [];
 let timerIndex = 0;
 let remaining = 0;
@@ -270,10 +286,7 @@ function nextStep() {
   const s = steps[timerIndex];
   remaining = s.min*60 + s.sec;
   document.getElementById("currentStep").innerText = s.name;
-  const total = steps[timerIndex].min * 60 + steps[timerIndex].sec;
-const percent = ((total - remaining) / total) * 100;
-bar.style.width = percent + "%";
-  currentStep.style.borderColor = "#0fo";
+  currentStep.style.borderColor = "#0f0";
   tick();
   interval = setInterval(tick,1000);
 }
@@ -331,6 +344,8 @@ function saveProcess() {
     name = prompt("Name this process");
     if (!name) return;
   }
+
+  processes[name] = {
     processType: processType.value,
     processName: processName.value,
     filmName: filmName.value,
@@ -338,13 +353,13 @@ function saveProcess() {
     temperature: temperature.value,
     pushPull: pushPull.value,
     notes: notes.value,
-    steps
+    steps: JSON.parse(JSON.stringify(steps))
   };
+
   localStorage.setItem("darkroomProcesses", JSON.stringify(processes));
-  currentProcessNAme = name;
+  currentProcessName = name;
   refreshProcessList();
 }
-
 function refreshProcessList() {
   const sel = document.getElementById("savedProcesses");
   sel.innerHTML = "<option value=''>Load process</option>";
