@@ -351,113 +351,11 @@ body.theme-minimal .template-btn {
 <div class="app">
 <h1>Darkroom Process Timer</h1>
 
-<!-- Theme Selector -->
-<div class="theme-section">
-  <span class="theme-label">🎨 UI Theme:</span>
-  <div class="theme-options">
-    <button class="theme-btn active" onclick="setTheme('classic')">Classic</button>
-    <button class="theme-btn" onclick="setTheme('modern')">Modern</button>
-    <button class="theme-btn" onclick="setTheme('minimal')">Minimal</button>
-    <button class="theme-btn" onclick="setTheme('darkpro')">Dark Pro</button>
-  </div>
-</div>
 
 <label>Process type</label>
 <select id="processType" onchange="updateProcessNames()">
   <option>Film</option>
   <option>Printing</option>
-  <option>Alternative Printing</option>
-</select>
-
-<label>Process name</label>
-<select id="processName"></select>
-
-<label>Film / Paper</label>
-<input id="filmName" placeholder="e.g. Kodak Portra 400">
-
-<label>Developer</label>
-<input id="developerName" placeholder="e.g. D-76">
-
-<label>Temperature(°C)</label>
-<input id="temperature" type="number" placeholder="20">
-
-<label>Push / Pull</label>
-<select id="pushPull">
-  <option>Pull -2</option>
-  <option>Pull -1</option>
-  <option selected>Normal</option>
-  <option>Push +1</option>
-  <option>Push +2</option>
-  <option>Push +3</option>
-</select>
-
-<label>Variation / Notes</label>
-<textarea id="notes"></textarea>
-
-<hr>
-
-<div id="steps"></div>
-<button class="secondary" onclick="addStep()">+ Add Step</button>
-
-<hr>
-
-<div class="info-box" id="totalTime"></div>
-<div class="upcoming" id="upcomingSteps"></div>
-<div class="info-box" id="pauseTime" style="display:none;"></div>
-
-<div class="current" id="currentStep">Ready</div>
-<div style="text-align:center;font-size:12px;color:#666;margin-bottom:6px;">
-  <span class="step-counter" id="stepCounter"></span>
-</div>
-<div class="timer" id="timer">00:00</div>
-<div id="progress" style="height:14px;background:#333;border-radius:4px;overflow:hidden;border:1px solid #555;">
-  <div id="bar" style="height:100%;width:0%;background:#9d84b7;"></div>
-</div>
-
-<div class="row">
-  <button id="startBtn" onclick="start()">Start</button>
-  <button id="pauseBtn" class="secondary" onclick="pause()">Pause</button>
-  <button id="stopBtn" class="secondary" onclick="stopTimer()">Stop</button>
-  <button class="audio-toggle secondary" id="audioToggle" onclick="toggleAudio()" title="Toggle sound">🔊</button>
-</div>
-
-<hr>
-
-<button onclick="saveProcess()">Save Process</button>
-<select id="savedProcesses" onchange="loadProcess()"></select>
-
-<div style="margin-bottom: 6px;">
-  <button class="secondary" style="margin-bottom: 3px; font-size: 11px;" onclick="toggleTemplates()">⭐ Quick Templates</button>
-  <div id="templatesBox" style="display:none;background:#1a1a1a;border:1px solid #9d84b7;padding:6px;border-radius:4px;margin-bottom:6px;">
-    <button class="template-btn" onclick="loadTemplate('C-41 Film')">C-41 Film</button>
-    <button class="template-btn" onclick="loadTemplate('E-6 Film')">E-6 Film</button>
-    <button class="template-btn" onclick="loadTemplate('B&W Film')">B&W Film</button>
-    <button class="template-btn" onclick="loadTemplate('RA-4 Print')">RA-4 Print</button>
-    <button class="template-btn" onclick="loadTemplate('B&W Print')">B&W Print</button>
-    <button class="template-btn" onclick="loadTemplate('Cyanotype')">Cyanotype</button>
-    <button class="template-btn" onclick="loadTemplate('Platinum/Palladium')">Platinum</button>
-  </div>
-</div>
-
-<div class="history-panel" id="historyPanel"></div>
-
-<div class="row">
-  <button class="secondary" onclick="deleteProcess()">Delete</button>
-  <button class="secondary" onclick="exportCSV()">📊 CSV</button>
-  <button class="secondary" onclick="exportPDF()">📄 PDF</button>
-  <button class="secondary" onclick="exportProcess()">JSON</button>
-  <button class="secondary" onclick="importProcess()">Import</button>
-  <button class="secondary" onclick="printCard()">Print</button>
-</div>
-
-<input type="file" id="fileInput" hidden>
-
-</div>
-
-<script>
-// ===== DOM Elements =====
-const timer = document.getElementById("timer");
-const currentStep = document.getElementById("currentStep");
 const startBtn = document.getElementById("startBtn");
 const pauseBtn = document.getElementById("pauseBtn");
 const stopBtn = document.getElementById("stopBtn");
@@ -471,6 +369,7 @@ const pushPull = document.getElementById("pushPull");
 const notes = document.getElementById("notes");
 const savedProcesses = document.getElementById("savedProcesses");
 const fileInput = document.getElementById("fileInput");
+const appContent = document.getElementById("appContent");
 
 // ===== State Management =====
 let currentProcessName = null;
@@ -479,7 +378,7 @@ let timerIndex = 0;
 let remainingSeconds = 0;
 let timerInterval = null;
 let pauseInterval = null;
-let audioEnabled = localStorage.getItem('darkroomAudio') !== 'false';
+let audioEnabled = true;
 let isRunning = false;
 let isPaused = false;
 let pausedSeconds = 0;
@@ -542,31 +441,6 @@ const templates = {
   ]}
 };
 
-// ===== Theme Management =====
-function setTheme(theme) {
-  document.body.className = theme ? `theme-${theme}` : '';
-  localStorage.setItem("darkroomTheme", theme);
-  
-  // Update active button safely (no reliance on global event)
-  document.querySelectorAll('.theme-btn').forEach(btn => {
-    const key = btn.textContent.toLowerCase().replace(/\s+/g, '');
-    if (key === (theme || '').toLowerCase()) {
-      btn.classList.add('active');
-    } else {
-      btn.classList.remove('active');
-    }
-  });
-}
-
-function loadTheme() {
-  const theme = localStorage.getItem("darkroomTheme") || 'classic';
-  document.body.className = theme ? `theme-${theme}` : '';
-  document.querySelectorAll('.theme-btn').forEach(btn => {
-    if (btn.textContent.toLowerCase().replace(/\s+/g, '') === theme) {
-      btn.classList.add('active');
-    }
-  });
-}
 
 // ===== Initialization =====
 function init() {
@@ -580,8 +454,6 @@ function init() {
   updateTotalTime();
   updateHistory();
   pauseInterval = setInterval(updatePauseTime, 200);
-  // reflect saved audio setting
-  document.getElementById("audioToggle").style.opacity = audioEnabled ? "1" : "0.5";
   updateUIState();
 }
 
@@ -596,9 +468,8 @@ function toggleSettings(section) {
 }
 
 function formatTime(seconds) {
-  const total = Math.max(0, Math.floor(seconds));
-  const m = Math.floor(total / 60);
-  const s = total % 60;
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
@@ -743,7 +614,6 @@ async function start() {
     console.log("Wake lock failed:", err);
   }
 
-  timer.className = "timer running";
   nextStep();
 }
 
@@ -756,23 +626,11 @@ function nextStep() {
   }
 
   const s = steps[timerIndex];
-  const totalSeconds = s.min * 60 + s.sec;
-
-  // If step duration is zero or negative, skip it immediately
-  if (!totalSeconds || totalSeconds <= 0) {
-    playSound();
-    vibrate();
-    timerIndex++;
-    setTimeout(() => nextStep(), 200);
-    return;
-  }
-
-  remainingSeconds = totalSeconds;
+  remainingSeconds = s.min * 60 + s.sec;
   
   currentStep.innerText = s.name;
   currentStep.className = "current " + getStepColor(s.name);
-  document.getElementById("stepCounter").innerText = \
-    `${timerIndex + 1}/${steps.length}`;
+  document.getElementById("stepCounter").innerText = `${timerIndex + 1}/${steps.length}`;
 
   if (s.tip) {
     const tipEl = document.createElement("div");
@@ -788,25 +646,20 @@ function nextStep() {
 }
 
 function tick() {
-  const displaySeconds = Math.ceil(Math.max(0, remainingSeconds));
-  timer.innerText = formatTime(displaySeconds);
+  const m = Math.floor(remainingSeconds / 60);
+  const s = remainingSeconds % 60;
+  timer.innerText = formatTime(remainingSeconds);
 
   // Update progress bar
   const step = steps[timerIndex];
   const totalSeconds = step.min * 60 + step.sec;
-  if (totalSeconds > 0) {
-    const elapsed = totalSeconds - remainingSeconds;
-    const progress = (elapsed / totalSeconds) * 100;
-    bar.style.width = Math.max(0, Math.min(100, progress)) + "%";
-  } else {
-    bar.style.width = "100%";
-  }
+  const elapsed = totalSeconds - remainingSeconds;
+  const progress = (elapsed / totalSeconds) * 100;
+  bar.style.width = Math.max(0, Math.min(100, progress)) + "%";
 
-  // Pulse effect when low time (based on integer display)
-  if (displaySeconds <= 10 && displaySeconds > 0) {
-    timer.style.transform = \
-      `scale(${1 + (displaySeconds % 2) * 0.05})`;
-    timer.classList.add('running');
+  // Pulse effect when low time
+  if (remainingSeconds <= 10 && remainingSeconds > 0) {
+    timer.style.transform = `scale(${1 + (remainingSeconds % 2) * 0.05})`;
   } else {
     timer.style.transform = "scale(1)";
   }
@@ -866,8 +719,8 @@ function stopTimer() {
   bar.style.width = "0%";
 
   // Release wake lock
-  if (wakelock && wakelock.release) {
-    wakelock.release().catch(e => console.warn('WakeLock release failed', e));
+  if (wakelock) {
+    wakelock.release();
     wakelock = null;
   }
 
@@ -889,8 +742,8 @@ function endTimer() {
   vibrate();
 
   // Release wake lock
-  if (wakelock && wakelock.release) {
-    wakelock.release().catch(e => console.warn('WakeLock release failed', e));
+  if (wakelock) {
+    wakelock.release();
     wakelock = null;
   }
 
@@ -941,7 +794,6 @@ function playSound() {
 
 function toggleAudio() {
   audioEnabled = !audioEnabled;
-  localStorage.setItem('darkroomAudio', audioEnabled);
   document.getElementById("audioToggle").style.opacity = audioEnabled ? "1" : "0.5";
   if (audioEnabled) playSound();
 }
@@ -1082,44 +934,23 @@ fileInput.onchange = e => {
 
 function exportCSV() {
   const rows = [];
-  
-  // Current process info
-  rows.push(["CURRENT PROCESS"]);
-  rows.push(["Process Name", processName.value || "N/A"]);
-  rows.push(["Type", processType.value || "N/A"]);
-  rows.push(["Film/Paper", filmName.value || "N/A"]);
-  rows.push(["Developer", developerName.value || "N/A"]);
-  rows.push(["Temperature (°C)", temperature.value || "N/A"]);
-  rows.push(["Push/Pull", pushPull.value || "N/A"]);
-  rows.push(["Notes", (notes.value || "N/A").replace(/\n/g, " | ")]);
-  rows.push([]);
-  
-  // Steps
-  rows.push(["STEPS"]);
-  rows.push(["Step #", "Name", "Duration (MM:SS)", "Tip"]);
-  steps.forEach((s, i) => {
-    const duration = formatTime(s.min * 60 + s.sec);
-    rows.push([
-      i + 1,
-      s.name,
-      duration,
-      s.tip || ""
-    ]);
-  });
-  
-  const totalSec = steps.reduce((sum, s) => sum + (s.min * 60 + s.sec), 0);
-  rows.push([]);
-  rows.push(["Total Time", formatTime(totalSec)]);
-  rows.push([]);
-  
-  // All saved processes
-  rows.push(["ALL SAVED PROCESSES"]);
-  rows.push(["Name", "Type", "Film/Paper", "Developer", "Temp", "Push/Pull", "Total Time", "Steps"]);
-  
+  // Header row
+  rows.push([
+    "Process Name",
+    "Type",
+    "Film/Paper",
+    "Developer",
+    "Temperature (°C)",
+    "Push/Pull",
+    "Notes",
+    "Total Time",
+    "Steps"
+  ]);
+
   Object.entries(processes).forEach(([name, p]) => {
     let totalSeconds = 0;
-    const stepText = p.steps.map((s, idx) => {
-      const secs = s.min * 60 + s.sec;
+    const stepText = (p.steps || []).map((s, idx) => {
+      const secs = (s.min || 0) * 60 + (s.sec || 0);
       totalSeconds += secs;
       return `${idx + 1}. ${s.name} (${formatTime(secs)})${s.tip ? " - " + s.tip : ""}`;
     }).join(" | ");
@@ -1131,6 +962,7 @@ function exportCSV() {
       p.developerName || "",
       p.temperature || "",
       p.pushPull || "",
+      (p.notes || "").replace(/\n/g, " | "),
       formatTime(totalSeconds),
       stepText
     ]);
@@ -1140,7 +972,7 @@ function exportCSV() {
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `darkroom-${processName.value || "process"}-${new Date().toISOString().split('T')[0]}.csv`;
+  a.download = `darkroom-processes-${new Date().toISOString().split('T')[0]}.csv`;
   a.click();
 }
 
@@ -1328,21 +1160,10 @@ document.addEventListener("keydown", (e) => {
 });
 
 // Handle wake lock release on visibility change
-document.addEventListener("visibilitychange", async () => {
-  try {
-    if (document.hidden) {
-      if (wakelock && wakelock.release) {
-        await wakelock.release();
-        wakelock = null;
-      }
-    } else {
-      // re-request if needed
-      if (isRunning && ("wakeLock" in navigator) && !wakelock) {
-        wakelock = await navigator.wakeLock.request("screen");
-      }
-    }
-  } catch (err) {
-    console.warn('Wake lock handling error', err);
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden && wakelock) {
+    wakelock.release();
+    wakelock = null;
   }
 });
 
@@ -1354,7 +1175,6 @@ document.addEventListener("touchmove", (e) => {
 }, { passive: false });
 
 // Start application
-loadTheme();
 init();
 </script>
 </body>
