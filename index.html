@@ -299,6 +299,7 @@ function nextStep() {
     currentStep.style.borderColor = "#f00";
     document.getElementById("timer").innerText = "00:00";
     timer.className = "timer done";
+    bar.style.width = "100%";
     vibrate();
     return;
   }
@@ -306,6 +307,7 @@ function nextStep() {
   remaining = s.min*60 + s.sec;
   document.getElementById("currentStep").innerText = s.name;
   currentStep.style.borderColor = "#0f0";
+  bar.style.width = "0%";
   tick();
   interval = setInterval(tick,1000);
 }
@@ -315,6 +317,13 @@ function tick() {
   const s = remaining%60;
   document.getElementById("timer").innerText =
     String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
+  
+  const step = steps[timerIndex];
+  const totalSeconds = step.min * 60 + step.sec;
+  const elapsed = totalSeconds - remaining;
+  const progress = (elapsed / totalSeconds) * 100;
+  bar.style.width = Math.max(0, progress) + "%";
+  
   if (remaining<=0) {
     vibrate();
     timerIndex++;
