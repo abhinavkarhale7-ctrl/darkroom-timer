@@ -14,7 +14,7 @@ body {
   font-family: system-ui, monospace;
 }
 .app {
-  max-width: 380px;
+  max-width: 360px;
   margin: auto;
 }
 h1 {
@@ -32,10 +32,20 @@ input, select, textarea, button {
   border-radius: 4px;
   border: none;
 }
+  .current {
+  text-align: center;
+  font-size: 16px;
+  padding: 6px;
+  border: 2px solid #0f0;
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
 textarea {
   resize: vertical;
 }
 button {
+  min-height: 48px;
+  font-size: 16px;
   background: #0f0;
   color: #000;
 }
@@ -60,8 +70,22 @@ button {
 }
 .timer {
   text-align: center;
-  font-size: 36px;
-  margin: 10px 0;
+  font-size: 40px;
+  margin: 12px 0;
+  transition: color 0.3s, transform 0.2s;
+}
+
+.timer.running {
+  color: #0f0;
+}
+
+.timer.paused {
+  color: #ff0;
+}
+
+.timer.done {
+  color: #f00;
+  transform: scale(1.1);
 }
 .current {
   text-align: center;
@@ -119,11 +143,14 @@ hr {
 
 <div class="current" id="currentStep"></div>
 <div class="timer" id="timer">00:00</div>
+<div id="progress" style="height:6px;background:#333;border-radius:3px;overflow:hidden;">
+  <div id="bar" style="height:100%;width:0%;background:#0f0;"></div>
+</div>
 
 <div class="row">
-  <button onclick="start()">Start</button>
-  <button class="secondary" onclick="pause()">Pause</button>
-  <button class="secondary" onclick="stopTimer()">Stop</button>
+ <button id="startBtn" onclick="start()">Start</button>
+<button id="pauseBtn" class="secondary" onclick="pause()">Pause</button>
+<button id="stopBtn" class="secondary" onclick="stopTimer()">Stop</button>
 </div>
 
 <hr>
@@ -221,21 +248,32 @@ function renderSteps() {
 
 function start() {
   if (!steps.length) return;
+  timer.className = "timer running";
   timerIndex = 0;
   nextStep();
+  startBtn.disabled = true;
+pauseBtn.disabled = false;
+pauseBtn.textContent = "Pause";
+timer.className = "timer running";
 }
 
 function nextStep() {
   if (interval) clearInterval(interval);
   if (timerIndex >= steps.length) {
     document.getElementById("currentStep").innerText = "Done";
+    currentStep.style.borderColor = "#f00";
     document.getElementById("timer").innerText = "00:00";
+    timer.className = "timer done";
     vibrate();
     return;
   }
   const s = steps[timerIndex];
   remaining = s.min*60 + s.sec;
   document.getElementById("currentStep").innerText = s.name;
+  const total = steps[timerIndex].min * 60 + steps[timerIndex].sec;
+const percent = ((total - remaining) / total) * 100;
+bar.style.width = percent + "%";
+  currentStep.style.borderColor = "#0fo";
   tick();
   interval = setInterval(tick,1000);
 }
@@ -250,15 +288,25 @@ function tick() {
     timerIndex++;
     nextStep();
   }
+  if (remaining <= 10 && remaining > 0) {
+  timer.style.transform = "scale(1.15)";
+} else {
+  timer.style.transform = "scale(1)";
+}
   remaining--;
 }
 
 function pause() {
+  function pause() {
   if (interval) {
     clearInterval(interval);
     interval = null;
+    timer.className = "timer paused";
+    pauseBtn.textContent = "Resume";
   } else {
-    interval = setInterval(tick,1000);
+    interval = setInterval(tick, 1000);
+    timer.className = "timer running";
+    pauseBtn.textContent = "Pause";
   }
 }
 
@@ -267,6 +315,9 @@ function stopTimer() {
   interval=null;
   document.getElementById("timer").innerText="00:00";
   document.getElementById("currentStep").innerText="";
+  startBtn.disabled = false;
+pauseBtn.textContent = "Pause";
+timer.className = "timer";
 }
 
 function vibrate() {
