@@ -8,8 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Darkroom Timer">
 <meta name="theme-color" content="#0a0a0a">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
+<!-- Removed PDF library (html2pdf) per request - PDF saving option removed -->
 <style>
 * {
   -webkit-tap-highlight-color: transparent;
@@ -99,7 +98,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .controls-row .start-btn { flex: 2 1 0; min-width: 120px; }
 .controls-row button:not(.start-btn), .controls-row .audio-toggle { flex: 1 1 0; }
 
-/* action-row (Save / Import / JSON / Print) - side-by-side layout */
+/* action-row (Save / Import / Export / Print) - side-by-side layout */
 .action-row {
   display: flex;
   gap: 8px;
@@ -297,7 +296,6 @@ button:focus, input:focus, select:focus, textarea:focus {
       <div style="display:flex;gap:8px;margin-top:8px;">
         <button class="secondary" onclick="deleteProcess()">Delete</button>
         <button class="secondary" onclick="exportCSV()">📊 CSV</button>
-        <button class="secondary" onclick="exportPDF()">📄 PDF</button>
       </div>
 
       <hr>
@@ -327,7 +325,7 @@ const savedProcesses = document.getElementById("savedProcesses");
 const fileInput = document.getElementById("fileInput");
 
 // ===== State Management =====
-let currentProcessName = null;
+let currentProcessName = null; // key used in saved processes
 let steps = [];
 let timerIndex = 0;
 let remainingSeconds = 0;
@@ -339,7 +337,7 @@ let isPaused = false;
 let pausedSeconds = 0;
 let pauseStartTime = null;
 let wakelock = null;
-// keep history data in storage but UI removed
+// history stored but UI removed
 let history = JSON.parse(localStorage.getItem("darkroomHistory")) || [];
 let processes = JSON.parse(localStorage.getItem("darkroomProcesses")) || {};
 
@@ -662,11 +660,11 @@ function updateProcessNames(selected = null) {
 
 function saveProcess() {
   let name = currentProcessName;
-  if (!name) { name = prompt("Name this process"); if (!name) return; }
+  if (!name) { name = prompt("Name this process (this will be the saved key)"); if (!name) return; }
 
   processes[name] = {
     processType: processType.value,
-    processName: processName.value,
+    processName: processName.value || name, // ensure processName exists
     filmName: filmName.value,
     developerName: developerName.value,
     temperature: temperature.value,
@@ -696,8 +694,8 @@ function loadProcess() {
   const name = savedProcesses.value;
   if (!name) return;
   currentProcessName = name;
-  const p = processes[name];
-  processType.value = p.processType;
+  const p = processes[name] || {};
+  processType.value = p.processType || "Film";
   updateProcessNames(p.processName);
   filmName.value = p.filmName || "";
   developerName.value = p.developerName || "";
@@ -748,27 +746,33 @@ fileInput.onchange = e => {
   r.readAsText(file);
 };
 
-// Export CSV (All saved processes, Steps grouped into single column)
+// Export CSV (All saved processes, Steps grouped into single column).
+// Improved/explicit column names and correct name handling:
+// Columns: Saved Key, Process Name, Type, Film/Paper, Developer, Temperature (°C), Push/Pull, Total Time, Notes, Steps
 function exportCSV() {
   const processEntries = Object.entries(processes);
   if (!processEntries.length) { alert("No saved processes to export."); return; }
 
   const header = [
+    "Saved Key",
     "Process Name",
-    "Process Type",
-    "Film / Paper",
+    "Type",
+    "Film/Paper",
     "Developer",
     "Temperature (°C)",
-    "Push / Pull",
+    "Push/Pull",
     "Total Time",
     "Notes",
     "Steps"
   ];
   const rows = [header];
 
-  processEntries.forEach(([name, p]) => {
-    const stepsArr = p.steps || [];
+  processEntries.forEach(([savedKey, p]) => {
+    const proc = p || {};
+    const stepsArr = proc.steps || [];
     const totalSec = stepsArr.reduce((s, st) => s + ((st.min || 0) * 60 + (st.sec || 0)), 0);
+
+    // Steps as single string, numbered, separated by " | "
     const stepsText = stepsArr.map((st, idx) => {
       const dur = formatTime((st.min || 0) * 60 + (st.sec || 0));
       const tipPart = st.tip ? ` - ${st.tip}` : "";
@@ -776,16 +780,18 @@ function exportCSV() {
     }).join(" | ");
 
     const row = [
-      name,
-      p.processType || "",
-      p.filmName || "",
-      p.developerName || "",
-      p.temperature || "",
-      p.pushPull || "",
+      savedKey,
+      proc.processName || savedKey,
+      proc.processType || "",
+      proc.filmName || "",
+      proc.developerName || "",
+      proc.temperature || "",
+      proc.pushPull || "",
       formatTime(totalSec),
-      (p.notes || "").replace(/\r?\n/g, " | "),
+      (proc.notes || "").replace(/\r?\n/g, " | "),
       stepsText
     ];
+
     rows.push(row);
   });
 
@@ -798,107 +804,7 @@ function exportCSV() {
   a.click();
 }
 
-// Export PDF (append element off-screen so html2pdf can measure)
-function exportPDF() {
-  if (steps.length === 0) { alert("Add steps first"); return; }
-  const totalSec = steps.reduce((sum, s) => sum + ((s.min||0)*60 + (s.sec||0)), 0);
-  const date = new Date().toLocaleDateString();
-
-  const element = document.createElement("div");
-  element.style.padding = "20px";
-  element.style.fontFamily = "Arial, sans-serif";
-  element.style.backgroundColor = "#fff";
-  element.style.color = "#000";
-  element.style.width = "210mm";
-  element.style.position = "absolute";
-  element.style.left = "-9999px";
-  element.style.top = "0";
-
-  element.innerHTML = `
-    <h1 style="text-align:center;color:#333;border-bottom:2px solid #333;padding-bottom:10px;">
-      Darkroom Process Timer Report
-    </h1>
-    <div style="margin-top:20px;padding:15px;background:#f5f5f5;border-left:4px solid #333;">
-      <h2 style="margin-top:0;color:#333;">Process Details</h2>
-      <table style="width:100%;border-collapse:collapse;">
-        <tr style="background:#e8e8e8;">
-          <td style="padding:8px;font-weight:bold;">Process Name:</td>
-          <td style="padding:8px;">${processName.value || "N/A"}</td>
-        </tr>
-        <tr>
-          <td style="padding:8px;font-weight:bold;">Type:</td>
-          <td style="padding:8px;">${processType.value || "N/A"}</td>
-        </tr>
-        <tr style="background:#f0f0f0;">
-          <td style="padding:8px;font-weight:bold;">Film/Paper:</td>
-          <td style="padding:8px;">${filmName.value || "N/A"}</td>
-        </tr>
-        <tr>
-          <td style="padding:8px;font-weight:bold;">Developer:</td>
-          <td style="padding:8px;">${developerName.value || "N/A"}</td>
-        </tr>
-        <tr style="background:#f0f0f0;">
-          <td style="padding:8px;font-weight:bold;">Temperature:</td>
-          <td style="padding:8px;">${temperature.value || "N/A"}°C</td>
-        </tr>
-        <tr>
-          <td style="padding:8px;font-weight:bold;">Push/Pull:</td>
-          <td style="padding:8px;">${pushPull.value || "N/A"}</td>
-        </tr>
-        <tr style="background:#f0f0f0;">
-          <td style="padding:8px;font-weight:bold;">Total Duration:</td>
-          <td style="padding:8px;font-weight:bold;color:#333;">${formatTime(totalSec)}</td>
-        </tr>
-        ${notes.value ? `<tr><td style="padding:8px;font-weight:bold;">Notes:</td><td style="padding:8px;">${notes.value.replace(/\n/g,"<br>")}</td></tr>` : ""}
-      </table>
-    </div>
-
-    <div style="margin-top:20px;padding:15px;background:#f5f5f5;">
-      <h2 style="margin-top:0;color:#333;">Process Steps</h2>
-      <table style="width:100%;border-collapse:collapse;margin-top:10px;">
-        <thead>
-          <tr style="background:#333;color:white;">
-            <th style="padding:10px;text-align:left;border:1px solid #999;">#</th>
-            <th style="padding:10px;text-align:left;border:1px solid #999;">Step Name</th>
-            <th style="padding:10px;text-align:center;border:1px solid #999;">Duration</th>
-            <th style="padding:10px;text-align:left;border:1px solid #999;">Tip/Notes</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${steps.map((s,i) => `
-            <tr style="background:${i%2===0 ? '#ffffff' : '#f9f9f9'};">
-              <td style="padding:10px;border:1px solid #ddd;font-weight:bold;">${i+1}</td>
-              <td style="padding:10px;border:1px solid #ddd;">${s.name}</td>
-              <td style="padding:10px;border:1px solid #ddd;text-align:center;font-weight:bold;">${formatTime((s.min||0)*60 + (s.sec||0))}</td>
-              <td style="padding:10px;border:1px solid #ddd;">${s.tip || "-"}</td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
-    </div>
-
-    <div style="margin-top:20px;padding:15px;background:#f0f0f0;border-left:4px solid #666;">
-      <p style="margin:0;"><strong>Generated:</strong> ${date}</p>
-      <p style="margin:5px 0 0 0;font-size:12px;color:#666;">Darkroom Process Timer</p>
-    </div>
-  `;
-
-  document.body.appendChild(element);
-
-  const opt = {
-    margin: 10,
-    filename: `darkroom-${processName.value || "process"}-${new Date().toISOString().split('T')[0]}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true },
-    jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
-  };
-
-  try {
-    html2pdf().set(opt).from(element).save().then(() => element.remove()).catch(err => { console.error("html2pdf error:", err); element.remove(); alert("PDF export failed (see console)."); });
-  } catch (e) { console.error("PDF generation failed:", e); element.remove(); alert("PDF export failed (see console)."); }
-}
-
-// Print card
+// Print card (keeps the print option)
 function printCard() {
   if (steps.length === 0) { alert("Add steps first"); return; }
   let content = `<!DOCTYPE html><html><head><title>Darkroom Card</title><style>body{font-family:monospace;margin:20px;line-height:1.8}h1{margin:10px 0;border-bottom:2px solid #000;padding-bottom:10px}.info{margin:10px 0;border:1px solid #000;padding:10px}.step{margin:8px 0;padding:8px;border-left:4px solid #000;padding-left:10px}.tip{font-size:0.9em;color:#666;margin-top:4px}</style></head><body>`;
