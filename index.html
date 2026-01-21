@@ -843,8 +843,8 @@ fileInput.onchange = e => {
 };
 
 // Export CSV - only "All Saved Processes" as requested.
-// Each saved process becomes one CSV row. Steps are expanded into columns:
-// Step 1 Name, Step 1 Duration, Step 1 Tip, Step 2 Name, ...
+// Each saved process becomes one CSV row. Steps are grouped into a single "Steps" column
+// with entries like: "1. Developer (08:00) - tip | 2. Stop (00:30)"
 function exportCSV() {
   const processEntries = Object.entries(processes);
   if (!processEntries.length) {
@@ -852,10 +852,7 @@ function exportCSV() {
     return;
   }
 
-  const maxSteps = processEntries.reduce((max, [, p]) => {
-    return Math.max(max, (p.steps || []).length);
-  }, 0);
-
+  // Header: single Steps column
   const header = [
     "Name",
     "Type",
@@ -864,48 +861,42 @@ function exportCSV() {
     "Temp",
     "Push/Pull",
     "Total Time",
-    "Notes"
+    "Notes",
+    "Steps"
   ];
-
-  for (let i = 1; i <= maxSteps; i++) {
-    header.push(`Step ${i} Name`);
-    header.push(`Step ${i} Duration`);
-    header.push(`Step ${i} Tip`);
-  }
 
   const rows = [header];
 
   processEntries.forEach(([name, p]) => {
-    const row = [];
     const stepsArr = p.steps || [];
     const totalSec = stepsArr.reduce((s, st) => s + ((st.min || 0) * 60 + (st.sec || 0)), 0);
 
-    row.push(name);
-    row.push(p.processType || "");
-    row.push(p.filmName || "");
-    row.push(p.developerName || "");
-    row.push(p.temperature || "");
-    row.push(p.pushPull || "");
-    row.push(formatTime(totalSec));
-    row.push((p.notes || "").replace(/\r?\n/g, " | "));
+    // Build single Steps string: numbered entries separated by " | "
+    const stepsText = stepsArr.map((st, idx) => {
+      const dur = formatTime((st.min || 0) * 60 + (st.sec || 0));
+      const tipPart = st.tip ? ` - ${st.tip}` : "";
+      return `${idx + 1}. ${st.name || ""} (${dur})${tipPart}`;
+    }).join(" | ");
 
-    for (let i = 0; i < maxSteps; i++) {
-      const s = stepsArr[i];
-      if (s) {
-        row.push(s.name || "");
-        row.push(formatTime((s.min || 0) * 60 + (s.sec || 0)));
-        row.push(s.tip || "");
-      } else {
-        row.push("");
-        row.push("");
-        row.push("");
-      }
-    }
+    const row = [
+      name,
+      p.processType || "",
+      p.filmName || "",
+      p.developerName || "",
+      p.temperature || "",
+      p.pushPull || "",
+      formatTime(totalSec),
+      (p.notes || "").replace(/\r?\n/g, " | "),
+      stepsText
+    ];
 
     rows.push(row);
   });
 
+  // Convert to CSV with proper quoting
   const csvContent = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+
+  // Prepend UTF-8 BOM to improve Excel compatibility
   const bom = "\uFEFF";
   const blob = new Blob([bom + csvContent], { type: "text/csv;charset=utf-8;" });
   const a = document.createElement("a");
