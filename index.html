@@ -252,98 +252,7 @@ hr {
   color: #000;
 }
 
-/* Theme Section */
-.theme-section {
-  background: #1a1a1a;
-  border: 1px solid #9d84b7;
-  padding: 8px;
-  border-radius: 4px;
-  margin-bottom: 6px;
-}
-
-.theme-label {
-  font-size: 12px;
-  font-weight: bold;
-  color: #9d84b7;
-  margin-bottom: 6px;
-  display: block;
-}
-
-.theme-options {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 4px;
-}
-
-.theme-btn {
-  padding: 8px;
-  font-size: 12px;
-  background: #333;
-  color: #d0d0d0;
-  border: 1px solid #555;
-  border-radius: 4px;
-  cursor: pointer;
-  width: 100%;
-  min-height: auto;
-}
-
-.theme-btn.active {
-  background: #9d84b7;
-  color: #000;
-  border-color: #9d84b7;
-  font-weight: bold;
-}
-
-/* Modern Theme */
-body.theme-modern {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-}
-
-body.theme-modern .app {
-  max-width: 100%;
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
-  margin: 0;
-  padding: 0;
-}
-
-body.theme-modern .app-content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-body.theme-modern .app-footer {
-  padding: 12px;
-  background: #1a1a1a;
-  border-top: 1px solid #9d84b7;
-}
-
-body.theme-modern .timer {
-  font-size: 56px;
-}
-
-/* Minimal Theme */
-body.theme-minimal button:disabled {
-  display: none;
-}
-
-body.theme-minimal .secondary {
-  display: none;
-}
-
-body.theme-minimal .template-btn {
-  display: inline-block;
-  width: auto;
-}
+/* Note: Theme selector removed per user request - related theme CSS and scripts were removed */
 </style>
 </head>
 
@@ -351,11 +260,102 @@ body.theme-minimal .template-btn {
 <div class="app">
 <h1>Darkroom Process Timer</h1>
 
-
 <label>Process type</label>
 <select id="processType" onchange="updateProcessNames()">
   <option>Film</option>
   <option>Printing</option>
+  <option>Alternative Printing</option>
+</select>
+
+<label>Process name</label>
+<select id="processName"></select>
+
+<label>Film / Paper</label>
+<input id="filmName" placeholder="e.g. Kodak Portra 400">
+
+<label>Developer</label>
+<input id="developerName" placeholder="e.g. D-76">
+
+<label>Temperature(°C)</label>
+<input id="temperature" type="number" placeholder="20">
+
+<label>Push / Pull</label>
+<select id="pushPull">
+  <option>Pull -2</option>
+  <option>Pull -1</option>
+  <option selected>Normal</option>
+  <option>Push +1</option>
+  <option>Push +2</option>
+  <option>Push +3</option>
+</select>
+
+<label>Variation / Notes</label>
+<textarea id="notes"></textarea>
+
+<hr>
+
+<div id="steps"></div>
+<button class="secondary" onclick="addStep()">+ Add Step</button>
+
+<hr>
+
+<div class="info-box" id="totalTime"></div>
+<div class="upcoming" id="upcomingSteps"></div>
+<div class="info-box" id="pauseTime" style="display:none;"></div>
+
+<div class="current" id="currentStep">Ready</div>
+<div style="text-align:center;font-size:12px;color:#666;margin-bottom:6px;">
+  <span class="step-counter" id="stepCounter"></span>
+</div>
+<div class="timer" id="timer">00:00</div>
+<div id="progress" style="height:14px;background:#333;border-radius:4px;overflow:hidden;border:1px solid #555;">
+  <div id="bar" style="height:100%;width:0%;background:#9d84b7;"></div>
+</div>
+
+<div class="row">
+  <button id="startBtn" onclick="start()">Start</button>
+  <button id="pauseBtn" class="secondary" onclick="pause()">Pause</button>
+  <button id="stopBtn" class="secondary" onclick="stopTimer()">Stop</button>
+  <button class="audio-toggle secondary" id="audioToggle" onclick="toggleAudio()" title="Toggle sound">🔊</button>
+</div>
+
+<hr>
+
+<button onclick="saveProcess()">Save Process</button>
+<select id="savedProcesses" onchange="loadProcess()"></select>
+
+<div style="margin-bottom: 6px;">
+  <button class="secondary" style="margin-bottom: 3px; font-size: 11px;" onclick="toggleTemplates()">⭐ Quick Templates</button>
+  <div id="templatesBox" style="display:none;background:#1a1a1a;border:1px solid #9d84b7;padding:6px;border-radius:4px;margin-bottom:6px;">
+    <button class="template-btn" onclick="loadTemplate('C-41 Film')">C-41 Film</button>
+    <button class="template-btn" onclick="loadTemplate('E-6 Film')">E-6 Film</button>
+    <button class="template-btn" onclick="loadTemplate('B&W Film')">B&W Film</button>
+    <button class="template-btn" onclick="loadTemplate('RA-4 Print')">RA-4 Print</button>
+    <button class="template-btn" onclick="loadTemplate('B&W Print')">B&W Print</button>
+    <button class="template-btn" onclick="loadTemplate('Cyanotype')">Cyanotype</button>
+    <button class="template-btn" onclick="loadTemplate('Platinum/Palladium')">Platinum</button>
+  </div>
+</div>
+
+<div class="history-panel" id="historyPanel"></div>
+
+<div class="row">
+  <button class="secondary" onclick="deleteProcess()">Delete</button>
+  <button class="secondary" onclick="exportCSV()">📊 CSV</button>
+  <button class="secondary" onclick="exportPDF()">📄 PDF</button>
+  <button class="secondary" onclick="exportProcess()">JSON</button>
+  <button class="secondary" onclick="importProcess()">Import</button>
+  <button class="secondary" onclick="printCard()">Print</button>
+</div>
+
+<input type="file" id="fileInput" hidden>
+
+</div>
+
+<script>
+// ===== DOM Elements =====
+const timer = document.getElementById("timer");
+const currentStep = document.getElementById("currentStep");
 const startBtn = document.getElementById("startBtn");
 const pauseBtn = document.getElementById("pauseBtn");
 const stopBtn = document.getElementById("stopBtn");
@@ -369,7 +369,6 @@ const pushPull = document.getElementById("pushPull");
 const notes = document.getElementById("notes");
 const savedProcesses = document.getElementById("savedProcesses");
 const fileInput = document.getElementById("fileInput");
-const appContent = document.getElementById("appContent");
 
 // ===== State Management =====
 let currentProcessName = null;
@@ -378,7 +377,8 @@ let timerIndex = 0;
 let remainingSeconds = 0;
 let timerInterval = null;
 let pauseInterval = null;
-let audioEnabled = true;
+// Persist audio preference across reloads (default true)
+let audioEnabled = localStorage.getItem("darkroomAudio") !== "false";
 let isRunning = false;
 let isPaused = false;
 let pausedSeconds = 0;
@@ -441,7 +441,6 @@ const templates = {
   ]}
 };
 
-
 // ===== Initialization =====
 function init() {
   addStep("Developer", 8, 0, "Agitate every 30 sec");
@@ -455,6 +454,9 @@ function init() {
   updateHistory();
   pauseInterval = setInterval(updatePauseTime, 200);
   updateUIState();
+
+  // Apply saved audio preference to UI
+  document.getElementById("audioToggle").style.opacity = audioEnabled ? "1" : "0.5";
 }
 
 // ===== UI Helper Functions =====
@@ -468,8 +470,10 @@ function toggleSettings(section) {
 }
 
 function formatTime(seconds) {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
+  // ensure integer seconds display (floor)
+  const total = Math.max(0, Math.floor(seconds));
+  const m = Math.floor(total / 60);
+  const s = total % 60;
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
@@ -612,6 +616,7 @@ async function start() {
     }
   } catch (err) {
     console.log("Wake lock failed:", err);
+    wakelock = null;
   }
 
   nextStep();
@@ -641,14 +646,15 @@ function nextStep() {
 
   bar.style.width = "0%";
   tick();
-  timerInterval = setInterval(tick, 100); // More frequent updates for smoothness
+  // Use 100ms updates for smooth progress but display integer seconds
+  timerInterval = setInterval(tick, 100);
   updateUpcomingSteps();
 }
 
 function tick() {
-  const m = Math.floor(remainingSeconds / 60);
-  const s = remainingSeconds % 60;
-  timer.innerText = formatTime(remainingSeconds);
+  // display whole seconds (ceil gives user-friendly countdown)
+  const displaySeconds = Math.ceil(Math.max(0, remainingSeconds));
+  timer.innerText = formatTime(displaySeconds);
 
   // Update progress bar
   const step = steps[timerIndex];
@@ -657,9 +663,9 @@ function tick() {
   const progress = (elapsed / totalSeconds) * 100;
   bar.style.width = Math.max(0, Math.min(100, progress)) + "%";
 
-  // Pulse effect when low time
-  if (remainingSeconds <= 10 && remainingSeconds > 0) {
-    timer.style.transform = `scale(${1 + (remainingSeconds % 2) * 0.05})`;
+  // Pulse effect when low time (based on integer display)
+  if (displaySeconds <= 10 && displaySeconds > 0) {
+    timer.style.transform = `scale(${1 + (displaySeconds % 2) * 0.05})`;
   } else {
     timer.style.transform = "scale(1)";
   }
@@ -718,9 +724,9 @@ function stopTimer() {
   pausedSeconds = 0;
   bar.style.width = "0%";
 
-  // Release wake lock
+  // Release wake lock (handle promise)
   if (wakelock) {
-    wakelock.release();
+    wakelock.release().catch(e => console.warn("WakeLock release failed", e));
     wakelock = null;
   }
 
@@ -741,9 +747,9 @@ function endTimer() {
   playSound();
   vibrate();
 
-  // Release wake lock
+  // Release wake lock (handle promise)
   if (wakelock) {
-    wakelock.release();
+    wakelock.release().catch(e => console.warn("WakeLock release failed", e));
     wakelock = null;
   }
 
@@ -794,6 +800,7 @@ function playSound() {
 
 function toggleAudio() {
   audioEnabled = !audioEnabled;
+  localStorage.setItem("darkroomAudio", audioEnabled ? "true" : "false");
   document.getElementById("audioToggle").style.opacity = audioEnabled ? "1" : "0.5";
   if (audioEnabled) playSound();
 }
@@ -934,23 +941,44 @@ fileInput.onchange = e => {
 
 function exportCSV() {
   const rows = [];
-  // Header row
-  rows.push([
-    "Process Name",
-    "Type",
-    "Film/Paper",
-    "Developer",
-    "Temperature (°C)",
-    "Push/Pull",
-    "Notes",
-    "Total Time",
-    "Steps"
-  ]);
-
+  
+  // Current process info
+  rows.push(["CURRENT PROCESS"]);
+  rows.push(["Process Name", processName.value || "N/A"]);
+  rows.push(["Type", processType.value || "N/A"]);
+  rows.push(["Film/Paper", filmName.value || "N/A"]);
+  rows.push(["Developer", developerName.value || "N/A"]);
+  rows.push(["Temperature (°C)", temperature.value || "N/A"]);
+  rows.push(["Push/Pull", pushPull.value || "N/A"]);
+  rows.push(["Notes", (notes.value || "N/A").replace(/\n/g, " | ")]);
+  rows.push([]);
+  
+  // Steps
+  rows.push(["STEPS"]);
+  rows.push(["Step #", "Name", "Duration (MM:SS)", "Tip"]);
+  steps.forEach((s, i) => {
+    const duration = formatTime(s.min * 60 + s.sec);
+    rows.push([
+      i + 1,
+      s.name,
+      duration,
+      s.tip || ""
+    ]);
+  });
+  
+  const totalSec = steps.reduce((sum, s) => sum + (s.min * 60 + s.sec), 0);
+  rows.push([]);
+  rows.push(["Total Time", formatTime(totalSec)]);
+  rows.push([]);
+  
+  // All saved processes
+  rows.push(["ALL SAVED PROCESSES"]);
+  rows.push(["Name", "Type", "Film/Paper", "Developer", "Temp", "Push/Pull", "Total Time", "Steps"]);
+  
   Object.entries(processes).forEach(([name, p]) => {
     let totalSeconds = 0;
-    const stepText = (p.steps || []).map((s, idx) => {
-      const secs = (s.min || 0) * 60 + (s.sec || 0);
+    const stepText = p.steps.map((s, idx) => {
+      const secs = s.min * 60 + s.sec;
       totalSeconds += secs;
       return `${idx + 1}. ${s.name} (${formatTime(secs)})${s.tip ? " - " + s.tip : ""}`;
     }).join(" | ");
@@ -962,7 +990,6 @@ function exportCSV() {
       p.developerName || "",
       p.temperature || "",
       p.pushPull || "",
-      (p.notes || "").replace(/\n/g, " | "),
       formatTime(totalSeconds),
       stepText
     ]);
@@ -972,7 +999,7 @@ function exportCSV() {
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `darkroom-processes-${new Date().toISOString().split('T')[0]}.csv`;
+  a.download = `darkroom-${processName.value || "process"}-${new Date().toISOString().split('T')[0]}.csv`;
   a.click();
 }
 
@@ -1159,11 +1186,25 @@ document.addEventListener("keydown", (e) => {
   if (e.code === "Escape") stopTimer();
 });
 
-// Handle wake lock release on visibility change
-document.addEventListener("visibilitychange", () => {
+// Handle wake lock release on visibility change and re-request when visible
+document.addEventListener("visibilitychange", async () => {
   if (document.hidden && wakelock) {
-    wakelock.release();
+    try {
+      await wakelock.release();
+    } catch (e) {
+      console.warn("WakeLock release failed", e);
+    }
     wakelock = null;
+  } else if (!document.hidden && isRunning) {
+    // Try to re-request wake lock when returning to the page
+    try {
+      if ("wakeLock" in navigator && !wakelock) {
+        wakelock = await navigator.wakeLock.request("screen");
+      }
+    } catch (err) {
+      console.log("Wake lock re-request failed:", err);
+      wakelock = null;
+    }
   }
 });
 
