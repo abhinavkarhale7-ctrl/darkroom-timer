@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Darkroom Process Timer</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Darkroom Timer">
@@ -16,340 +16,323 @@
   box-sizing: border-box;
 }
 
-body {
+html, body {
+  height: 100%;
   margin: 0;
-  padding: 10px;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, monospace;
   background: #0a0a0a;
   color: #d0d0d0;
-  font-family: system-ui, monospace;
-  overscroll-behavior: contain;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .app {
-  max-width: 360px;
-  margin: auto;
+  max-width: 900px; /* wider for desktop */
+  margin: 20px auto;
+  padding: 12px;
 }
 
+/* Grid layout for larger screens */
+.app-grid {
+  display: block;
+  gap: 18px;
+}
+
+@media (min-width: 820px) {
+  .app-grid {
+    display: grid;
+    grid-template-columns: 1fr 340px; /* main + sidebar */
+    align-items: start;
+    gap: 20px;
+  }
+}
+
+/* Main column */
+.main {
+  background: transparent;
+}
+
+/* Sidebar */
+.sidebar {
+  background: transparent;
+}
+
+/* Headings and labels */
 h1 {
   text-align: center;
-  font-size: 18px;
-  margin-bottom: 12px;
+  font-size: 20px;
+  margin: 6px 0 14px 0;
 }
 
 label {
+  display: block;
   font-size: 12px;
+  margin-bottom: 4px;
 }
 
+/* Form controls */
 input, select, textarea, button {
   width: 100%;
-  margin-bottom: 6px;
-  padding: 6px;
+  margin-bottom: 8px;
+  padding: 8px;
   font-size: 14px;
-  border-radius: 4px;
+  border-radius: 6px;
   border: 1px solid #444;
-  background: #1a1a1a;
+  background: #121212;
   color: #d0d0d0;
+  outline: none;
 }
 
 textarea {
   resize: vertical;
-  color: #d0d0d0;
-  background: #1a1a1a;
+  min-height: 64px;
 }
 
+/* Buttons */
 button {
-  min-height: 48px;
-  font-size: 16px;
+  min-height: 44px;
+  font-size: 15px;
   background: #9d84b7;
   color: #000;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: transform 0.12s ease, opacity 0.12s ease;
   border: none;
+  border-radius: 6px;
 }
 
-button:active {
-  transform: scale(0.98);
-}
-
-button:disabled {
-  opacity: 0.5;
-}
+button:active { transform: translateY(1px); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .secondary {
-  background: #444;
-  color: #9d84b7;
-  border: 1px solid #9d84b7;
+  background: #2b2b2b;
+  color: #d0c5e6;
+  border: 1px solid #3d3d3d;
 }
 
+/* Rows and responsive controls */
 .row {
   display: flex;
-  gap: 6px;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
+.row > button, .row > .audio-toggle {
+  flex: 1 1 auto;
+}
+
+/* Step list */
 .step {
   display: flex;
-  gap: 6px;
-  margin-bottom: 4px;
+  gap: 8px;
+  margin-bottom: 8px;
+  align-items: center;
 }
 
-.step input {
+.step-inputs {
+  display: flex;
+  gap: 8px;
   flex: 1;
+  align-items: center;
 }
 
-.step button {
-  width: 36px;
-  min-height: auto;
-  padding: 6px;
+.step-inputs input[type="text"], .step-inputs input[type="number"] {
+  padding: 8px;
+  border-radius: 6px;
+  background: #151515;
+  border: 1px solid #333;
+  color: #d0d0d0;
 }
 
+/* timer and visual areas */
 .timer {
   text-align: center;
-  font-size: 40px;
+  font-size: 44px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   margin: 12px 0;
-  transition: color 0.3s, transform 0.2s;
+  transition: color 0.2s, transform 0.12s;
   letter-spacing: -2px;
 }
 
-.timer.running {
-  color: #4ade80;
-  animation: pulse 0.8s infinite;
+@media (min-width: 820px) {
+  .timer { font-size: 56px; }
 }
 
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-
-.timer.paused {
-  color: #fbbf24;
-}
-
-.timer.done {
-  color: #ff6b6b;
-}
+.timer.running { color: #4ade80; }
+.timer.paused { color: #fbbf24; }
+.timer.done { color: #ff6b6b; }
 
 .current {
   text-align: center;
-  font-size: 14px;
-  padding: 6px;
+  font-size: 13px;
+  padding: 8px;
   border: 2px solid #9d84b7;
-  border-radius: 6px;
-  margin-bottom: 6px;
-}
-
-hr {
-  border: 0;
-  border-top: 1px solid #444;
-  margin: 8px 0;
+  border-radius: 8px;
+  margin-bottom: 8px;
 }
 
 .info-box {
-  background: #1a1a1a;
-  border: 1px solid #9d84b7;
+  background: #0f0f0f;
+  border: 1px solid #2f2a3f;
   padding: 8px;
-  border-radius: 4px;
-  margin-bottom: 6px;
-  font-size: 12px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  font-size: 13px;
   text-align: center;
   color: #d0d0d0;
 }
 
-.step-counter {
-  font-weight: bold;
-  color: #9d84b7;
-}
-
 .upcoming {
-  background: #1a1a1a;
+  background: #0f0f0f;
   border-left: 3px solid #9d84b7;
-  padding: 6px;
-  margin-bottom: 6px;
-  font-size: 11px;
-  max-height: 100px;
-  overflow-y: auto;
-}
-
-.upcoming-item {
-  padding: 4px 0;
-  color: #999;
-}
-
-.upcoming-item.next {
-  color: #4ade80;
-  font-weight: bold;
-}
-
-.color-dev { border-left: 4px solid #6a7fdb !important; }
-.color-stop { border-left: 4px solid #d4a574 !important; }
-.color-fix { border-left: 4px solid #9d84b7 !important; }
-.color-wash { border-left: 4px solid #7fccdb !important; }
-
-.step-tip {
-  font-size: 10px;
-  color: #999;
-  font-style: italic;
-  margin-top: 4px;
-}
-
-.history-panel {
-  background: #1a1a1a;
-  border: 1px solid #9d84b7;
   padding: 8px;
-  border-radius: 4px;
-  margin-bottom: 6px;
-  font-size: 10px;
-  max-height: 150px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  max-height: 140px;
+  overflow-y: auto;
+  border-radius: 6px;
+}
+
+.upcoming-item { padding: 6px 0; color: #aaa; }
+.upcoming-item.next { color: #4ade80; font-weight: 700; }
+
+.step-tip { font-size: 11px; color: #9aa; margin-top: 6px; }
+
+/* History and saved list */
+.history-panel {
+  background: #0f0f0f;
+  border: 1px solid #2f2a3f;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  max-height: 320px;
   overflow-y: auto;
 }
 
 .history-item {
-  padding: 4px;
-  border-bottom: 1px solid #444;
-  color: #999;
+  padding: 8px;
+  border-bottom: 1px solid #222;
+  color: #bbb;
+}
+.history-item:last-child { border-bottom: none; }
+
+/* Progress bar */
+#progress { height: 14px; background: #1a1a1a; border-radius: 6px; overflow: hidden; border: 1px solid #2b2b2b; }
+#bar { height: 100%; width: 0%; background: #9d84b7; transition: width 0.08s linear; }
+
+/* small controls */
+.audio-toggle { width: auto; padding: 6px 12px; font-size: 13px; min-height: 40px; }
+
+/* Compact adjustments on very small screens */
+@media (max-width: 420px) {
+  body { padding: 6px; }
+  .app { margin: 6px; padding: 6px; }
+  input, select, textarea, button { font-size: 14px; padding: 8px; }
+  .timer { font-size: 48px; }
 }
 
-.history-item:last-child {
-  border-bottom: none;
+/* Accessibility: focus styles */
+button:focus, input:focus, select:focus, textarea:focus {
+  box-shadow: 0 0 0 3px rgba(157,132,183,0.16);
+  border-color: #a98ac3;
 }
-
-@media (max-width: 480px) {
-  .timer {
-    font-size: 48px;
-  }
-  button {
-    min-height: 56px;
-    font-size: 18px;
-  }
-  .app {
-    max-width: 100%;
-  }
-}
-
-.audio-toggle {
-  width: auto;
-  padding: 4px 12px;
-  font-size: 12px;
-  min-height: 40px;
-}
-
-.template-btn {
-  padding: 6px;
-  font-size: 12px;
-  background: #2a2a2a;
-  color: #9d84b7;
-  border: 1px solid #9d84b7;
-  margin: 2px;
-  cursor: pointer;
-  width: auto;
-  display: inline-block;
-  min-height: auto;
-}
-
-.template-btn:active {
-  background: #9d84b7;
-  color: #000;
-}
-
-/* Note: Theme selector removed per user request - related theme CSS and scripts were removed */
 </style>
 </head>
 
 <body>
 <div class="app">
-<h1>Darkroom Process Timer</h1>
+  <h1>Darkroom Process Timer</h1>
 
-<label>Process type</label>
-<select id="processType" onchange="updateProcessNames()">
-  <option>Film</option>
-  <option>Printing</option>
-  <option>Alternative Printing</option>
-</select>
+  <div class="app-grid">
+    <div class="main">
+      <label>Process type</label>
+      <select id="processType" onchange="updateProcessNames()">
+        <option>Film</option>
+        <option>Printing</option>
+        <option>Alternative Printing</option>
+      </select>
 
-<label>Process name</label>
-<select id="processName"></select>
+      <label>Process name</label>
+      <select id="processName"></select>
 
-<label>Film / Paper</label>
-<input id="filmName" placeholder="e.g. Kodak Portra 400">
+      <label>Film / Paper</label>
+      <input id="filmName" placeholder="e.g. Kodak Portra 400">
 
-<label>Developer</label>
-<input id="developerName" placeholder="e.g. D-76">
+      <label>Developer</label>
+      <input id="developerName" placeholder="e.g. D-76">
 
-<label>Temperature(°C)</label>
-<input id="temperature" type="number" placeholder="20">
+      <label>Temperature(°C)</label>
+      <input id="temperature" type="number" placeholder="20">
 
-<label>Push / Pull</label>
-<select id="pushPull">
-  <option>Pull -2</option>
-  <option>Pull -1</option>
-  <option selected>Normal</option>
-  <option>Push +1</option>
-  <option>Push +2</option>
-  <option>Push +3</option>
-</select>
+      <label>Push / Pull</label>
+      <select id="pushPull">
+        <option>Pull -2</option>
+        <option>Pull -1</option>
+        <option selected>Normal</option>
+        <option>Push +1</option>
+        <option>Push +2</option>
+        <option>Push +3</option>
+      </select>
 
-<label>Variation / Notes</label>
-<textarea id="notes"></textarea>
+      <label>Variation / Notes</label>
+      <textarea id="notes"></textarea>
 
-<hr>
+      <hr>
 
-<div id="steps"></div>
-<button class="secondary" onclick="addStep()">+ Add Step</button>
+      <div id="steps"></div>
+      <button class="secondary" onclick="addStep()">+ Add Step</button>
 
-<hr>
+      <hr>
 
-<div class="info-box" id="totalTime"></div>
-<div class="upcoming" id="upcomingSteps"></div>
-<div class="info-box" id="pauseTime" style="display:none;"></div>
+      <div class="info-box" id="totalTime"></div>
+      <div class="upcoming" id="upcomingSteps"></div>
+      <div class="info-box" id="pauseTime" style="display:none;"></div>
 
-<div class="current" id="currentStep">Ready</div>
-<div style="text-align:center;font-size:12px;color:#666;margin-bottom:6px;">
-  <span class="step-counter" id="stepCounter"></span>
-</div>
-<div class="timer" id="timer">00:00</div>
-<div id="progress" style="height:14px;background:#333;border-radius:4px;overflow:hidden;border:1px solid #555;">
-  <div id="bar" style="height:100%;width:0%;background:#9d84b7;"></div>
-</div>
+      <div class="current" id="currentStep">Ready</div>
+      <div style="text-align:center;font-size:12px;color:#999;margin-bottom:6px;">
+        <span class="step-counter" id="stepCounter"></span>
+      </div>
 
-<div class="row">
-  <button id="startBtn" onclick="start()">Start</button>
-  <button id="pauseBtn" class="secondary" onclick="pause()">Pause</button>
-  <button id="stopBtn" class="secondary" onclick="stopTimer()">Stop</button>
-  <button class="audio-toggle secondary" id="audioToggle" onclick="toggleAudio()" title="Toggle sound">🔊</button>
-</div>
+      <div class="timer" id="timer">00:00</div>
+      <div id="progress">
+        <div id="bar"></div>
+      </div>
 
-<hr>
+      <div class="row" style="margin-top:10px;">
+        <button id="startBtn" onclick="start()">Start</button>
+        <button id="pauseBtn" class="secondary" onclick="pause()">Pause</button>
+        <button id="stopBtn" class="secondary" onclick="stopTimer()">Stop</button>
+        <button class="audio-toggle secondary" id="audioToggle" onclick="toggleAudio()" title="Toggle sound">🔊</button>
+      </div>
 
-<button onclick="saveProcess()">Save Process</button>
-<select id="savedProcesses" onchange="loadProcess()"></select>
+      <hr>
 
-<div style="margin-bottom: 6px;">
-  <button class="secondary" style="margin-bottom: 3px; font-size: 11px;" onclick="toggleTemplates()">⭐ Quick Templates</button>
-  <div id="templatesBox" style="display:none;background:#1a1a1a;border:1px solid #9d84b7;padding:6px;border-radius:4px;margin-bottom:6px;">
-    <button class="template-btn" onclick="loadTemplate('C-41 Film')">C-41 Film</button>
-    <button class="template-btn" onclick="loadTemplate('E-6 Film')">E-6 Film</button>
-    <button class="template-btn" onclick="loadTemplate('B&W Film')">B&W Film</button>
-    <button class="template-btn" onclick="loadTemplate('RA-4 Print')">RA-4 Print</button>
-    <button class="template-btn" onclick="loadTemplate('B&W Print')">B&W Print</button>
-    <button class="template-btn" onclick="loadTemplate('Cyanotype')">Cyanotype</button>
-    <button class="template-btn" onclick="loadTemplate('Platinum/Palladium')">Platinum</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button onclick="saveProcess()">Save Process</button>
+        <button class="secondary" onclick="importProcess()">Import</button>
+        <button class="secondary" onclick="exportProcess()">JSON</button>
+        <button class="secondary" onclick="printCard()">Print</button>
+      </div>
+    </div>
+
+    <aside class="sidebar">
+      <label>Saved processes</label>
+      <select id="savedProcesses" onchange="loadProcess()"></select>
+
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button class="secondary" onclick="deleteProcess()">Delete</button>
+        <button class="secondary" onclick="exportCSV()">📊 CSV</button>
+        <button class="secondary" onclick="exportPDF()">📄 PDF</button>
+      </div>
+
+      <hr>
+
+      <div class="history-panel" id="historyPanel"></div>
+    </aside>
   </div>
-</div>
 
-<div class="history-panel" id="historyPanel"></div>
-
-<div class="row">
-  <button class="secondary" onclick="deleteProcess()">Delete</button>
-  <button class="secondary" onclick="exportCSV()">📊 CSV</button>
-  <button class="secondary" onclick="exportPDF()">📄 PDF</button>
-  <button class="secondary" onclick="exportProcess()">JSON</button>
-  <button class="secondary" onclick="importProcess()">Import</button>
-  <button class="secondary" onclick="printCard()">Print</button>
-</div>
-
-<input type="file" id="fileInput" hidden>
-
+  <input type="file" id="fileInput" hidden>
 </div>
 
 <script>
@@ -377,7 +360,6 @@ let timerIndex = 0;
 let remainingSeconds = 0;
 let timerInterval = null;
 let pauseInterval = null;
-// Persist audio preference across reloads (default true)
 let audioEnabled = localStorage.getItem("darkroomAudio") !== "false";
 let isRunning = false;
 let isPaused = false;
@@ -387,58 +369,11 @@ let wakelock = null;
 let history = JSON.parse(localStorage.getItem("darkroomHistory")) || [];
 let processes = JSON.parse(localStorage.getItem("darkroomProcesses")) || {};
 
-// ===== Process Configuration =====
+// ===== Process Configuration (kept for process name choices) =====
 const processOptions = {
   "Film": ["C-41", "ECN-2", "E-6", "B&W", "B&W Reversal"],
   "Printing": ["B&W Contact Printing", "RA-4 Contact Printing", "B&W Reversal Printing", "RA-4 Reversal Printing"],
   "Alternative Printing": ["Cyanotype", "Salt Printing", "Carbon Transfer", "Vandyke Brown", "Albumen", "Gum Bichromate", "Platinum/Palladium", "Bromoil"]
-};
-
-const templates = {
-  "C-41 Film": { type: "Film", name: "C-41", steps: [
-    {name: "Pre-wash", min: 1, sec: 0, tip: "Warm water"},
-    {name: "Developer", min: 3, sec: 15, tip: "Agitate every 30 sec"},
-    {name: "Stop", min: 0, sec: 30, tip: "Gentle agitation"},
-    {name: "Fix", min: 1, sec: 30, tip: "Agitate every 30 sec"},
-    {name: "Wash", min: 5, sec: 0, tip: "Multiple rinses"}
-  ]},
-  "E-6 Film": { type: "Film", name: "E-6", steps: [
-    {name: "Developer", min: 6, sec: 0, tip: "Agitate every 30 sec"},
-    {name: "Stop", min: 1, sec: 0, tip: "Gentle"},
-    {name: "Wash", min: 2, sec: 0, tip: "Clean water"},
-    {name: "Bleach", min: 6, sec: 0, tip: ""},
-    {name: "Fix", min: 6, sec: 0, tip: ""}
-  ]},
-  "B&W Film": { type: "Film", name: "B&W", steps: [
-    {name: "Developer", min: 8, sec: 0, tip: "Agitate every 30 sec"},
-    {name: "Stop", min: 0, sec: 30, tip: ""},
-    {name: "Fix", min: 5, sec: 0, tip: ""},
-    {name: "Wash", min: 10, sec: 0, tip: ""}
-  ]},
-  "RA-4 Print": { type: "Printing", name: "RA-4 Contact Printing", steps: [
-    {name: "Developer", min: 2, sec: 0, tip: "20-24°C"},
-    {name: "Stop", min: 0, sec: 30, tip: ""},
-    {name: "Fix", min: 1, sec: 0, tip: ""},
-    {name: "Wash", min: 5, sec: 0, tip: ""}
-  ]},
-  "B&W Print": { type: "Printing", name: "B&W Contact Printing", steps: [
-    {name: "Developer", min: 1, sec: 30, tip: "Rock tray"},
-    {name: "Stop", min: 0, sec: 20, tip: ""},
-    {name: "Fix", min: 2, sec: 0, tip: ""},
-    {name: "Wash", min: 5, sec: 0, tip: ""}
-  ]},
-  "Cyanotype": { type: "Alternative Printing", name: "Cyanotype", steps: [
-    {name: "Coat", min: 0, sec: 1, tip: "Brush evenly"},
-    {name: "Dry", min: 10, sec: 0, tip: "In dark room"},
-    {name: "Expose", min: 15, sec: 0, tip: "UV light or sun"},
-    {name: "Rinse", min: 5, sec: 0, tip: "Wash in water"}
-  ]},
-  "Platinum/Palladium": { type: "Alternative Printing", name: "Platinum/Palladium", steps: [
-    {name: "Coat", min: 0, sec: 1, tip: "Brush evenly"},
-    {name: "Dry", min: 10, sec: 0, tip: "Heat"},
-    {name: "Expose", min: 10, sec: 0, tip: "UV light"},
-    {name: "Develop", min: 2, sec: 0, tip: "Potassium oxalate"}
-  ]}
 };
 
 // ===== Initialization =====
@@ -454,23 +389,11 @@ function init() {
   updateHistory();
   pauseInterval = setInterval(updatePauseTime, 200);
   updateUIState();
-
-  // Apply saved audio preference to UI
   document.getElementById("audioToggle").style.opacity = audioEnabled ? "1" : "0.5";
 }
 
 // ===== UI Helper Functions =====
-function toggleSettings(section) {
-  const title = event.target.closest(".settings-title");
-  title.classList.toggle("collapsed");
-  const content = title.parentElement.querySelector(".settings-content");
-  if (content) {
-    content.style.display = content.style.display === "none" ? "flex" : "none";
-  }
-}
-
 function formatTime(seconds) {
-  // ensure integer seconds display (floor)
   const total = Math.max(0, Math.floor(seconds));
   const m = Math.floor(total / 60);
   const s = total % 60;
@@ -514,9 +437,7 @@ function renderSteps() {
     nameInput.value = s.name;
     nameInput.disabled = isRunning;
     nameInput.oninput = e => { steps[i].name = e.target.value; updateUpcomingSteps(); };
-
-    const timeDiv = document.createElement("div");
-    timeDiv.className = "step-time";
+    nameInput.type = "text";
 
     const minInput = document.createElement("input");
     minInput.type = "number";
@@ -524,6 +445,7 @@ function renderSteps() {
     minInput.value = s.min;
     minInput.disabled = isRunning;
     minInput.min = "0";
+    minInput.style.width = "72px";
     minInput.oninput = e => { steps[i].min = Math.max(0, Number(e.target.value)); updateTotalTime(); };
 
     const secInput = document.createElement("input");
@@ -533,6 +455,7 @@ function renderSteps() {
     secInput.disabled = isRunning;
     secInput.min = "0";
     secInput.max = "59";
+    secInput.style.width = "72px";
     secInput.oninput = e => { steps[i].sec = Math.max(0, Math.min(59, Number(e.target.value))); updateTotalTime(); };
 
     const tipInput = document.createElement("input");
@@ -541,16 +464,16 @@ function renderSteps() {
     tipInput.disabled = isRunning;
     tipInput.oninput = e => { steps[i].tip = e.target.value; };
 
-    timeDiv.appendChild(minInput);
-    timeDiv.appendChild(secInput);
     inputsDiv.appendChild(nameInput);
-    inputsDiv.appendChild(timeDiv);
+    inputsDiv.appendChild(minInput);
+    inputsDiv.appendChild(secInput);
     inputsDiv.appendChild(tipInput);
 
     const btn = document.createElement("button");
-    btn.className = "step-delete";
-    btn.textContent = "✕";
+    btn.className = "step-delete secondary";
+    btn.textContent = "Remove";
     btn.disabled = isRunning;
+    btn.style.minWidth = "84px";
     btn.onclick = () => removeStep(i);
 
     div.appendChild(inputsDiv);
@@ -563,31 +486,38 @@ function renderSteps() {
 function updateTotalTime() {
   let totalSec = 0;
   steps.forEach(s => {
-    totalSec += s.min * 60 + s.sec;
+    totalSec += (s.min || 0) * 60 + (s.sec || 0);
   });
-  document.getElementById("totalTime").innerText = formatTime(totalSec);
+  document.getElementById("totalTime").innerText = `Total: ${formatTime(totalSec)}`;
 }
 
 function updateUpcomingSteps() {
   const upcoming = document.getElementById("upcomingSteps");
   upcoming.innerHTML = "";
 
-  if (timerIndex < steps.length) {
+  if (timerIndex < steps.length && isRunning) {
     const current = steps[timerIndex];
     const tip = current.tip || "";
-    const currentTime = formatTime(current.min * 60 + current.sec);
-    upcoming.innerHTML = `<div class="upcoming-item next">▶ ${current.name} (${currentTime})${tip ? "<br><small>" + tip + "</small>" : ""}</div>`;
+    const currentTime = formatTime((current.min || 0) * 60 + (current.sec || 0));
+    upcoming.innerHTML = `<div class="upcoming-item next">▶ ${current.name} (${currentTime})${tip ? "<br><small class='step-tip'>" + tip + "</small>" : ""}</div>`;
 
-    for (let i = timerIndex + 1; i < Math.min(timerIndex + 3, steps.length); i++) {
+    for (let i = timerIndex + 1; i < Math.min(timerIndex + 4, steps.length); i++) {
       const s = steps[i];
-      const stepTime = formatTime(s.min * 60 + s.sec);
+      const stepTime = formatTime((s.min || 0) * 60 + (s.sec || 0));
+      upcoming.innerHTML += `<div class="upcoming-item">${s.name} (${stepTime})</div>`;
+    }
+  } else if (!isRunning) {
+    // show next few steps from start
+    for (let i = 0; i < Math.min(3, steps.length); i++) {
+      const s = steps[i];
+      const stepTime = formatTime((s.min || 0) * 60 + (s.sec || 0));
       upcoming.innerHTML += `<div class="upcoming-item">${s.name} (${stepTime})</div>`;
     }
   }
 }
 
 function getStepColor(name) {
-  const lower = name.toLowerCase();
+  const lower = (name || "").toLowerCase();
   if (lower.includes("develop")) return "color-dev";
   if (lower.includes("stop")) return "color-stop";
   if (lower.includes("fix")) return "color-fix";
@@ -631,41 +561,43 @@ function nextStep() {
   }
 
   const s = steps[timerIndex];
-  remainingSeconds = s.min * 60 + s.sec;
-  
-  currentStep.innerText = s.name;
-  currentStep.className = "current " + getStepColor(s.name);
+  remainingSeconds = (s.min || 0) * 60 + (s.sec || 0);
+
+  currentStep.innerText = s.name || "Step";
+  currentStep.className = "current " + getStepColor(s.name || "");
   document.getElementById("stepCounter").innerText = `${timerIndex + 1}/${steps.length}`;
 
   if (s.tip) {
     const tipEl = document.createElement("div");
     tipEl.className = "step-tip";
     tipEl.innerText = s.tip;
+    // remove any old tip then append
+    const existing = currentStep.querySelector(".step-tip");
+    if (existing) existing.remove();
     currentStep.appendChild(tipEl);
+  } else {
+    const existing = currentStep.querySelector(".step-tip");
+    if (existing) existing.remove();
   }
 
   bar.style.width = "0%";
   tick();
-  // Use 100ms updates for smooth progress but display integer seconds
-  timerInterval = setInterval(tick, 100);
+  timerInterval = setInterval(tick, 100); // 100ms for smooth progress
   updateUpcomingSteps();
 }
 
 function tick() {
-  // display whole seconds (ceil gives user-friendly countdown)
   const displaySeconds = Math.ceil(Math.max(0, remainingSeconds));
   timer.innerText = formatTime(displaySeconds);
 
-  // Update progress bar
-  const step = steps[timerIndex];
-  const totalSeconds = step.min * 60 + step.sec;
+  const step = steps[timerIndex] || { min: 0, sec: 0 };
+  const totalSeconds = (step.min || 0) * 60 + (step.sec || 0) || 1;
   const elapsed = totalSeconds - remainingSeconds;
   const progress = (elapsed / totalSeconds) * 100;
   bar.style.width = Math.max(0, Math.min(100, progress)) + "%";
 
-  // Pulse effect when low time (based on integer display)
   if (displaySeconds <= 10 && displaySeconds > 0) {
-    timer.style.transform = `scale(${1 + (displaySeconds % 2) * 0.05})`;
+    timer.style.transform = `scale(${1 + (displaySeconds % 2) * 0.04})`;
   } else {
     timer.style.transform = "scale(1)";
   }
@@ -678,7 +610,7 @@ function tick() {
     playSound();
     vibrate();
     timerIndex++;
-    setTimeout(() => nextStep(), 500); // Slight delay for feedback
+    setTimeout(() => nextStep(), 450);
   }
 }
 
@@ -686,7 +618,6 @@ function pause() {
   if (!isRunning) return;
 
   if (!isPaused) {
-    // Pause the timer
     clearInterval(timerInterval);
     isPaused = true;
     pauseStartTime = Date.now();
@@ -694,7 +625,6 @@ function pause() {
     document.getElementById("pauseTime").style.display = "block";
     document.getElementById("pauseTime").style.opacity = "1";
   } else {
-    // Resume the timer
     if (pauseStartTime) {
       pausedSeconds += Math.floor((Date.now() - pauseStartTime) / 1000);
     }
@@ -724,7 +654,6 @@ function stopTimer() {
   pausedSeconds = 0;
   bar.style.width = "0%";
 
-  // Release wake lock (handle promise)
   if (wakelock) {
     wakelock.release().catch(e => console.warn("WakeLock release failed", e));
     wakelock = null;
@@ -747,7 +676,6 @@ function endTimer() {
   playSound();
   vibrate();
 
-  // Release wake lock (handle promise)
   if (wakelock) {
     wakelock.release().catch(e => console.warn("WakeLock release failed", e));
     wakelock = null;
@@ -770,27 +698,21 @@ function updatePauseTime() {
 
 // ===== Audio & Haptics =====
 function vibrate() {
-  if (navigator.vibrate) {
-    navigator.vibrate([50, 30, 50]);
-  }
+  if (navigator.vibrate) navigator.vibrate([50,30,50]);
 }
 
 function playSound() {
   if (!audioEnabled) return;
-
   try {
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const osc = audioContext.createOscillator();
     const gain = audioContext.createGain();
-
     osc.connect(gain);
     gain.connect(audioContext.destination);
-
     osc.frequency.value = 880;
     osc.type = "sine";
     gain.gain.setValueAtTime(0.3, audioContext.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-
     osc.start(audioContext.currentTime);
     osc.stop(audioContext.currentTime + 0.3);
   } catch (e) {
@@ -817,14 +739,11 @@ function updateProcessNames(selected = null) {
     processName.appendChild(o);
   });
 
-  if (selected) {
-    processName.value = selected;
-  }
+  if (selected) processName.value = selected;
 }
 
 function saveProcess() {
   let name = currentProcessName;
-
   if (!name) {
     name = prompt("Name this process");
     if (!name) return;
@@ -872,7 +791,7 @@ function loadProcess() {
   temperature.value = p.temperature || "";
   pushPull.value = p.pushPull || "Normal";
   notes.value = p.notes || "";
-  steps = JSON.parse(JSON.stringify(p.steps));
+  steps = JSON.parse(JSON.stringify(p.steps || []));
   renderSteps();
   updateTotalTime();
 }
@@ -883,29 +802,13 @@ function deleteProcess() {
     alert("Select a process to delete");
     return;
   }
-
   if (!confirm(`Delete "${name}"?`)) return;
-
   delete processes[name];
   localStorage.setItem("darkroomProcesses", JSON.stringify(processes));
   savedProcesses.value = "";
   currentProcessName = null;
   refreshProcessList();
   alert("Deleted!");
-}
-
-function loadTemplate(name) {
-  const template = templates[name];
-  if (!template) return;
-
-  processType.value = template.type;
-  updateProcessNames(template.name);
-  filmName.value = "";
-  developerName.value = "";
-  temperature.value = "";
-  steps = JSON.parse(JSON.stringify(template.steps));
-  renderSteps();
-  updateTotalTime();
 }
 
 // ===== Import/Export =====
@@ -949,12 +852,10 @@ function exportCSV() {
     return;
   }
 
-  // Determine maximum number of steps across saved processes
   const maxSteps = processEntries.reduce((max, [, p]) => {
     return Math.max(max, (p.steps || []).length);
   }, 0);
 
-  // Build header
   const header = [
     "Name",
     "Type",
@@ -966,7 +867,6 @@ function exportCSV() {
     "Notes"
   ];
 
-  // Add step columns for up to maxSteps
   for (let i = 1; i <= maxSteps; i++) {
     header.push(`Step ${i} Name`);
     header.push(`Step ${i} Duration`);
@@ -975,7 +875,6 @@ function exportCSV() {
 
   const rows = [header];
 
-  // Add a row per saved process
   processEntries.forEach(([name, p]) => {
     const row = [];
     const stepsArr = p.steps || [];
@@ -990,7 +889,6 @@ function exportCSV() {
     row.push(formatTime(totalSec));
     row.push((p.notes || "").replace(/\r?\n/g, " | "));
 
-    // Add step columns (empty if not present)
     for (let i = 0; i < maxSteps; i++) {
       const s = stepsArr[i];
       if (s) {
@@ -1007,21 +905,13 @@ function exportCSV() {
     rows.push(row);
   });
 
-  // Convert to CSV with proper quoting
   const csvContent = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
-
-  // Prepend UTF-8 BOM to improve Excel compatibility
   const bom = "\uFEFF";
   const blob = new Blob([bom + csvContent], { type: "text/csv;charset=utf-8;" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = `darkroom-saved-processes-${new Date().toISOString().split('T')[0]}.csv`;
   a.click();
-}
-
-function exportCSVFlat() {
-  // kept for compatibility if needed in future — currently exportCSV meets the requested format
-  exportCSV();
 }
 
 function exportPDF() {
@@ -1043,7 +933,6 @@ function exportPDF() {
     <h1 style="text-align: center; color: #333; border-bottom: 2px solid #333; padding-bottom: 10px;">
       Darkroom Process Timer Report
     </h1>
-    
     <div style="margin-top: 20px; padding: 15px; background: #f5f5f5; border-left: 4px solid #333;">
       <h2 style="margin-top: 0; color: #333;">Process Details</h2>
       <table style="width: 100%; border-collapse: collapse;">
@@ -1155,7 +1044,7 @@ function printCard() {
   `;
 
   steps.forEach((s, i) => {
-    const stepTime = formatTime(s.min * 60 + s.sec);
+    const stepTime = formatTime((s.min || 0) * 60 + (s.sec || 0));
     content += `
       <div class="step">
         <strong>${i + 1}. ${s.name}</strong> - ${stepTime}
@@ -1172,12 +1061,13 @@ function printCard() {
   setTimeout(() => win.print(), 250);
 }
 
+// ===== History =====
 function addToHistory(processName) {
   const now = new Date();
   const dateStr = now.toLocaleDateString();
   const timeStr = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   history.unshift(`${dateStr} ${timeStr} - ${processName}`);
-  if (history.length > 50) history.pop();
+  if (history.length > 200) history.pop();
   localStorage.setItem("darkroomHistory", JSON.stringify(history));
   updateHistory();
 }
@@ -1189,7 +1079,7 @@ function updateHistory() {
     return;
   }
   panel.innerHTML = "";
-  history.slice(0, 20).forEach(entry => {
+  history.slice(0, 100).forEach(entry => {
     const item = document.createElement("div");
     item.className = "history-item";
     item.textContent = entry;
@@ -1207,33 +1097,17 @@ document.addEventListener("keydown", (e) => {
   if (e.code === "Escape") stopTimer();
 });
 
-// Handle wake lock release on visibility change and re-request when visible
 document.addEventListener("visibilitychange", async () => {
   if (document.hidden && wakelock) {
-    try {
-      await wakelock.release();
-    } catch (e) {
-      console.warn("WakeLock release failed", e);
-    }
+    try { await wakelock.release(); } catch (e) { console.warn("WakeLock release failed", e); }
     wakelock = null;
   } else if (!document.hidden && isRunning) {
-    // Try to re-request wake lock when returning to the page
-    try {
-      if ("wakeLock" in navigator && !wakelock) {
-        wakelock = await navigator.wakeLock.request("screen");
-      }
-    } catch (err) {
-      console.log("Wake lock re-request failed:", err);
-      wakelock = null;
-    }
+    try { if ("wakeLock" in navigator && !wakelock) wakelock = await navigator.wakeLock.request("screen"); } catch (err) { console.log("Wake lock re-request failed:", err); wakelock = null; }
   }
 });
 
-// Prevent accidental scrolling
 document.addEventListener("touchmove", (e) => {
-  if (isRunning) {
-    e.preventDefault();
-  }
+  if (isRunning) e.preventDefault();
 }, { passive: false });
 
 // Start application
