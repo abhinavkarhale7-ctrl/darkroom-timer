@@ -161,12 +161,6 @@
   /* pause info small text */
   .pause-info { text-align:center; margin-bottom:6px; color:var(--muted); font-size:13px; display:none; }
 
-  /* Film preset grid */
-  .preset-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; }
-  .preset-grid > div { background:var(--input-bg); padding:12px; border-radius:var(--radius); border:1px solid var(--border); }
-  .preset-grid label { display:block; font-size:12px; opacity:0.7; margin-bottom:4px; }
-  .preset-grid .value { font-size:16px; font-weight:600; color:var(--text); }
-
 </style>
 </head>
 <body>
@@ -179,7 +173,6 @@
     <div class="tabs">
       <button id="tabEditor" class="tab-btn active" onclick="switchTo('editor')">Editor</button>
       <button id="tabTimer" class="tab-btn" onclick="switchTo('timer')">Timer</button>
-      <button id="tabPresets" class="tab-btn" onclick="switchTo('presets')">Film Presets</button>
     </div>
 
     <!-- Editor page -->
@@ -289,16 +282,6 @@
       </div>
     </div>
 
-    <!-- Film Presets page -->
-    <div id="presetsPage" class="page">
-      <div class="panel">
-        <h2 style="margin-top:0;font-size:20px;font-weight:600;">Film Preset Engine</h2>
-        <label>Select Film Stock</label>
-        <select id="filmSelect" onchange="renderPreset(this.value)"></select>
-        <div id="presetView" style="margin-top:16px;"></div>
-      </div>
-    </div>
-
   </div>
 
   <input type="file" id="fileInput" hidden />
@@ -308,21 +291,16 @@
   function switchTo(page) {
     document.getElementById('editorPage').classList.remove('active');
     document.getElementById('timerPage').classList.remove('active');
-    document.getElementById('presetsPage').classList.remove('active');
     document.getElementById('tabEditor').classList.remove('active');
     document.getElementById('tabTimer').classList.remove('active');
-    document.getElementById('tabPresets').classList.remove('active');
 
     if (page === 'editor') {
       document.getElementById('editorPage').classList.add('active');
       document.getElementById('tabEditor').classList.add('active');
-    } else if (page === 'timer') {
+    } else {
       document.getElementById('timerPage').classList.add('active');
       document.getElementById('tabTimer').classList.add('active');
       renderTimerUI();
-    } else if (page === 'presets') {
-      document.getElementById('presetsPage').classList.add('active');
-      document.getElementById('tabPresets').classList.add('active');
     }
   }
 
@@ -757,73 +735,6 @@
   }
 
   function addToHistory(name){ const now = new Date(); history.unshift(`${now.toLocaleDateString()} ${now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} - ${name}`); if(history.length>200) history.length=200; localStorage.setItem('darkroomHistory', JSON.stringify(history)); }
-
-  // Film Presets
-  const films = {
-    "Kodak Portra 400": {
-      temp: 300, tint: -4, contrast: -5, sat: -5, highlights: -10, shadows: 5, blues: -5, reds: -2, curve: "Soft", profile: "Noritsu"
-    },
-    "Kodak Portra 160": {
-      temp: 250, tint: -3, contrast: -8, sat: -8, highlights: -12, shadows: 6, blues: -6, reds: -1, curve: "Soft", profile: "Noritsu"
-    },
-    "Kodak Gold 200": {
-      temp: 450, tint: -2, contrast: 10, sat: 8, highlights: -5, shadows: 3, blues: 4, reds: 3, curve: "Medium", profile: "Frontier"
-    },
-    "Kodak Ultramax 400": {
-      temp: 400, tint: -1, contrast: 12, sat: 10, highlights: -4, shadows: 2, blues: 6, reds: 4, curve: "Medium", profile: "Frontier"
-    },
-    "Fujifilm Pro 400H": {
-      temp: 200, tint: -6, contrast: -6, sat: -6, highlights: -10, shadows: 5, blues: -10, reds: -4, curve: "Soft", profile: "Noritsu"
-    },
-    "Fujifilm Superia 200": {
-      temp: 350, tint: -2, contrast: 5, sat: 5, highlights: -6, shadows: 3, blues: 8, reds: 2, curve: "Medium", profile: "Frontier"
-    },
-    "Kodak Ektar 100": {
-      temp: 500, tint: 0, contrast: 15, sat: 15, highlights: -3, shadows: 1, blues: 10, reds: 8, curve: "Hard", profile: "Frontier"
-    },
-    "Cinestill 800T": {
-      temp: -300, tint: 6, contrast: 5, sat: 6, highlights: -8, shadows: 4, blues: 12, reds: -4, curve: "Soft", profile: "Noritsu"
-    },
-    "Kodak Vision3 250D": {
-      temp: 150, tint: -3, contrast: -3, sat: -2, highlights: -12, shadows: 6, blues: -3, reds: -1, curve: "Soft", profile: "Noritsu"
-    },
-    "Kodak Vision3 500T": {
-      temp: -250, tint: 4, contrast: -2, sat: -1, highlights: -10, shadows: 6, blues: 6, reds: -3, curve: "Soft", profile: "Noritsu"
-    }
-  };
-
-  function renderPreset(film) {
-    const p = films[film];
-    if (!p) return;
-    const view = document.getElementById('presetView');
-    view.innerHTML = `
-      <h3 style="margin:0 0 12px 0;font-size:18px;font-weight:600;">${film}</h3>
-      <div class="preset-grid">
-        <div><label>Temp</label><div class="value">${p.temp}</div></div>
-        <div><label>Tint</label><div class="value">${p.tint}</div></div>
-        <div><label>Contrast</label><div class="value">${p.contrast}</div></div>
-        <div><label>Saturation</label><div class="value">${p.sat}</div></div>
-        <div><label>Highlights</label><div class="value">${p.highlights}</div></div>
-        <div><label>Shadows</label><div class="value">${p.shadows}</div></div>
-        <div><label>Blues</label><div class="value">${p.blues}</div></div>
-        <div><label>Reds</label><div class="value">${p.reds}</div></div>
-        <div><label>Tone Curve</label><div class="value">${p.curve}</div></div>
-        <div><label>NLP Profile</label><div class="value">${p.profile}</div></div>
-      </div>
-    `;
-  }
-
-  // Initialize film select
-  (function initFilmPresets() {
-    const select = document.getElementById('filmSelect');
-    Object.keys(films).forEach(f => {
-      const option = document.createElement('option');
-      option.value = f;
-      option.textContent = f;
-      select.appendChild(option);
-    });
-    renderPreset(select.value);
-  })();
 
   // keyboard & touch
   document.addEventListener('keydown', e => { if(e.code === 'Space'){ e.preventDefault(); if(!isRunning) start(); else pause(); } if(e.code === 'Escape') stopTimer(); });

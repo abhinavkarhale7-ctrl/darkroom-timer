@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Film Color Preset Tool</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body{font-family:system-ui;background:#0f0f0f;color:#fff;margin:0;padding:20px}
+.container{max-width:1100px;margin:auto}
+h1{font-size:28px}
+select,button,input{padding:10px;border-radius:6px;border:none;font-size:14px}
+.card{background:#161616;border-radius:12px;padding:16px;margin-top:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+label{font-size:12px;opacity:0.8}
+.value{font-size:14px;font-weight:600}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Film Preset Engine</h1>
+<select id="filmSelect"></select>
+<div id="presetView" class="card"></div>
+</div>
+<script>
+const films = {
+"Kodak Portra 400":{
+ temp:300,tint:-4,contrast:-5,sat:-5,highlights:-10,shadows:5,blues:-5,reds:-2,curve:"Soft",profile:"Noritsu"
+},
+"Kodak Portra 160":{
+ temp:250,tint:-3,contrast:-8,sat:-8,highlights:-12,shadows:6,blues:-6,reds:-1,curve:"Soft",profile:"Noritsu"
+},
+"Kodak Gold 200":{
+ temp:450,tint:-2,contrast:10,sat:8,highlights:-5,shadows:3,blues:4,reds:3,curve:"Medium",profile:"Frontier"
+},
+"Kodak Ultramax 400":{
+ temp:400,tint:-1,contrast:12,sat:10,highlights:-4,shadows:2,blues:6,reds:4,curve:"Medium",profile:"Frontier"
+},
+"Fujifilm Pro 400H":{
+ temp:200,tint:-6,contrast:-6,sat:-6,highlights:-10,shadows:5,blues:-10,reds:-4,curve:"Soft",profile:"Noritsu"
+},
+"Fujifilm Superia 200":{
+ temp:350,tint:-2,contrast:5,sat:5,highlights:-6,shadows:3,blues:8,reds:2,curve:"Medium",profile:"Frontier"
+},
+"Kodak Ektar 100":{
+ temp:500,tint:0,contrast:15,sat:15,highlights:-3,shadows:1,blues:10,reds:8,curve:"Hard",profile:"Frontier"
+},
+"Cinestill 800T":{
+ temp:-300,tint:6,contrast:5,sat:6,highlights:-8,shadows:4,blues:12,reds:-4,curve:"Soft",profile:"Noritsu"
+},
+"Kodak Vision3 250D":{
+ temp:150,tint:-3,contrast:-3,sat:-2,highlights:-12,shadows:6,blues:-3,reds:-1,curve:"Soft",profile:"Noritsu"
+},
+"Kodak Vision3 500T":{
+ temp:-250,tint:4,contrast:-2,sat:-1,highlights:-10,shadows:6,blues:6,reds:-3,curve:"Soft",profile:"Noritsu"
+}
+};
+
+const select = document.getElementById("filmSelect");
+const view = document.getElementById("presetView");
+
+Object.keys(films).forEach(f=>{
+ const o=document.createElement("option");
+ o.value=f;o.textContent=f;
+ select.appendChild(o);
+});
+
+function renderPreset(film){
+ const p = films[film];
+ view.innerHTML = `
+ <h2>${film}</h2>
+ <div class="grid">
+ <div><label>Temp</label><div class="value">${p.temp}</div></div>
+ <div><label>Tint</label><div class="value">${p.tint}</div></div>
+ <div><label>Contrast</label><div class="value">${p.contrast}</div></div>
+ <div><label>Saturation</label><div class="value">${p.sat}</div></div>
+ <div><label>Highlights</label><div class="value">${p.highlights}</div></div>
+ <div><label>Shadows</label><div class="value">${p.shadows}</div></div>
+ <div><label>Blues</label><div class="value">${p.blues}</div></div>
+ <div><label>Reds</label><div class="value">${p.reds}</div></div>
+ <div><label>Tone Curve</label><div class="value">${p.curve}</div></div>
+ <div><label>NLP Profile</label><div class="value">${p.profile}</div></div>
+ </div>
+ `;
+}
+
+select.addEventListener("change",()=>renderPreset(select.value));
+renderPreset(select.value);
+</script>
+</body>
+</html>
